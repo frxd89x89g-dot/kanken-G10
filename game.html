@@ -278,7 +278,31 @@
       display: none;
     }
 
+    /* ✅ Overlay Feedback */
+    .feedback-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.85);
+      font-size: 48px;
+      font-weight: 1200;
+      animation: pop .1s ease;
+      text-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .feedback-correct {
+      color: #22c55e;
+    }
+
+    .feedback-wrong {
+      color: #ef4444;
+    }
+
     .toast {
+      /* Keep existing toast if needed, but overlay is primary */
       position: fixed;
       left: 50%;
       bottom: 14px;
@@ -455,6 +479,8 @@
   </header>
 
   <main id="root"></main>
+
+  <div class="feedback-overlay" id="feedback"></div>
   <div class="toast" id="toast"></div>
 
   <div class="fatal" id="fatal">
@@ -475,6 +501,7 @@
 
     const root = document.getElementById("root");
     const toastEl = document.getElementById("toast");
+    const feedbackEl = document.getElementById("feedback");
     const levelEl = document.getElementById("level");
     const masteredEl = document.getElementById("mastered");
     const todayDoneEl = document.getElementById("todayDone");
@@ -494,6 +521,16 @@
       clearTimeout(toast._t);
       toast._t = setTimeout(() => toastEl.style.display = "none", 1200);
     }
+
+    function showFeedback(isCorrect, msg) {
+      feedbackEl.className = "feedback-overlay " + (isCorrect ? "feedback-correct" : "feedback-wrong");
+      feedbackEl.innerHTML = msg;
+      feedbackEl.style.display = "flex";
+      setTimeout(() => {
+        feedbackEl.style.display = "none";
+      }, 700);
+    }
+
     function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
     function shuffle(arr) {
       const a = [...arr];
@@ -766,32 +803,43 @@
       return ds.length ? ds : null;
     }
 
-    async function getStrokes(ch) {
-      if (strokeCache[ch]?.ds?.length) return strokeCache[ch].ds;
-
-      const url = kvgUrlFor(ch);
-
-      // ✅ FIX: Promise.race with timeout
-      const res = await Promise.race([
-        fetch(url, { cache: "no-store" }),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Timeout loading SVG: " + url)), 8000)
-        )
+    // ✅ FIX: Strict fetch with timeout helper
+    async function fetchStrokeData(url, timeoutMs = 5000) {
+      return Promise.race([
+        (async () => {
+          const res = await fetch(url, { cache: "no-store" });
+          if (!res.ok) throw new Error("Status " + res.status);
+          const txt = await res.text();
+          const ds = parseKanjiVG(txt);
+          if (!ds) throw new Error("No paths parsed");
+          return ds;
+        })(),
+        new Promise((_, r) => setTimeout(() => r(new Error("Timeout " + timeoutMs + "ms")), timeoutMs))
       ]);
+    }
 
-      if (!res.ok) {
-        throw new Error("SVG fetch failed: " + res.status + " / " + url);
+    async function getStrokes(ch) {
+      if (strokeCache[ch]?.ds) return strokeCache[ch].ds;
+
+      let url = kvgUrlFor(ch);
+      try {
+        // Attempt 1
+        const ds = await fetchStrokeData(url, 5000);
+        strokeCache[ch] = { ds, t: Date.now() };
+        localStorage.setItem(STROKE_CACHE_KEY, JSON.stringify(strokeCache));
+        return ds;
+      } catch (e1) {
+        // Retry with cache buster
+        try {
+          const retryUrl = url + "?t=" + Date.now();
+          const ds = await fetchStrokeData(retryUrl, 5000);
+          strokeCache[ch] = { ds, t: Date.now() };
+          localStorage.setItem(STROKE_CACHE_KEY, JSON.stringify(strokeCache));
+          return ds;
+        } catch (e2) {
+          throw new Error(`Failed loading ${ch} (${url}): ${e2.message}`);
+        }
       }
-
-      const txt = await res.text();
-      const ds = parseKanjiVG(txt);
-      if (!ds) {
-        throw new Error("Stroke parse failed: " + url);
-      }
-
-      strokeCache[ch] = { ds, t: Date.now() };
-      localStorage.setItem(STROKE_CACHE_KEY, JSON.stringify(strokeCache));
-      return ds;
     }
 
     function makeStrokeSvg(ds, redIndex) {
@@ -868,25 +916,34 @@
       screen(card);
     }
 
-    function viewLoading(tagText, msg) {
+    // ✅ FIX: Enhanced loading screen
+    function viewLoading(kanji, url, onRetry, onSkip) {
       const card = el("div", { class: "screen" }, [
-        el("div", { class: "tag" }, tagText),
+        el("div", { class: "tag" }, "かきじゅん"),
         el("div", { class: "loading" }, [
           el("div", { class: "spinner" }),
-          el("div", {}, msg || "よみこみちゅう…")
+          el("div", {}, `「${kanji}」を よみこみちゅう…`),
+          el("div", { style: "font-size:10px;color:#94a3b8;margin-top:8px;" }, url)
         ]),
-        el("button", { class: "btn btnWide btnAccent", type: "button", onClick: viewHome }, "メニューにもどる")
+        el("div", { style: "display:flex;gap:10px;margin-top:10px;" }, [
+          onRetry ? el("button", { class: "btn btnWide", type: "button", onClick: onRetry }, "もういちど") : null,
+          onSkip ? el("button", { class: "btn btnWide", type: "button", onClick: onSkip }, "スキップする") : null
+        ]),
+        el("button", { class: "btn btnWide btnAccent", style: "margin-top:10px;", type: "button", onClick: viewHome }, "メニューにもどる")
       ]);
       screen(card);
     }
 
-    function viewError(tagText, msg) {
+    function viewErrorLoad(kanji, err, onRetry, onSkip) {
       const card = el("div", { class: "screen" }, [
-        el("div", { class: "tag" }, tagText),
-        el("div", { class: "title", style: "margin-top:18px;font-size:30px;color:#ef4444;" }, "とれなかった…"),
-        el("div", { class: "warn" }, msg),
-        el("button", { class: "btn btnWide", type: "button", onClick: () => startMode("kakijun") }, "もういちど（かきじゅん）"),
-        el("button", { class: "btn btnWide btnAccent", type: "button", onClick: viewHome }, "メニューにもどる")
+        el("div", { class: "tag" }, "エラー"),
+        el("div", { class: "title", style: "margin-top:18px;font-size:30px;color:#ef4444;" }, "よみこめない…"),
+        el("div", { class: "warn" }, `「${kanji}」のデータありませんでした。\n${err.message}`),
+        el("div", { style: "display:flex;gap:10px;margin-top:10px;" }, [
+          el("button", { class: "btn btnWide", type: "button", onClick: onRetry }, "もういちど"),
+          el("button", { class: "btn btnWide", type: "button", onClick: onSkip }, "スキップ")
+        ]),
+        el("button", { class: "btn btnWide btnAccent", style: "margin-top:10px;", type: "button", onClick: viewHome }, "メニューにもどる")
       ]);
       screen(card);
     }
@@ -1051,30 +1108,60 @@
 
         if (state.mode === "kakijun") {
           const kanji = weightedPickKanji();
-          viewLoading("かきじゅん（2→3）", `「${kanji}」の データを よみこみちゅう…`);
 
-          const ds = await getStrokes(kanji);
-          const total = ds.length;
+          /* ✅ FIX: Retry / Skip Logic */
+          const doLoad = async () => {
+            // Show loading with retry/skip attached
+            viewLoading(kanji, kvgUrlFor(kanji),
+              () => doLoad(), // Retry
+              () => {         // Skip
+                state.session.total += 1;
+                state.session.done += 1;
+                renderHud();
+                isNextRunning = false;
+                next();
+              }
+            );
 
-          const redIndex = 1 + Math.floor(Math.random() * total);
-          const choiceNums = new Set([redIndex]);
-          while (choiceNums.size < 3) {
-            const delta = [-2, -1, 1, 2][Math.floor(Math.random() * 4)];
-            choiceNums.add(clamp(redIndex + delta, 1, total));
-          }
-          const choices = shuffle([...choiceNums].map(n => `${n}かくめ`));
+            try {
+              const ds = await getStrokes(kanji);
+              const total = ds.length;
+              const redIndex = 1 + Math.floor(Math.random() * total);
+              const choiceNums = new Set([redIndex]);
+              while (choiceNums.size < 3) {
+                const delta = [-2, -1, 1, 2][Math.floor(Math.random() * 4)];
+                choiceNums.add(clamp(redIndex + delta, 1, total));
+              }
+              const choices = shuffle([...choiceNums].map(n => `${n}かくめ`));
 
-          const q = {
-            type: "kakijun",
-            tag: "かきじゅん（2→3）",
-            kanji,
-            svgNode: makeStrokeSvg(ds, redIndex),
-            choices,
-            answer: `${redIndex}かくめ`,
-            explain: `「${kanji}」は ぜんぶで ${total}かく。`,
-            counterText: `もんだい ${state.session.done + 1}/${state.session.limit}（この字ランク：${state.progress[kanji] || 0}）`
+              const q = {
+                type: "kakijun",
+                tag: "かきじゅん（2→3）",
+                kanji,
+                svgNode: makeStrokeSvg(ds, redIndex),
+                choices,
+                answer: `${redIndex}かくめ`,
+                explain: `「${kanji}」は ぜんぶで ${total}かく。`,
+                counterText: `もんだい ${state.session.done + 1}/${state.session.limit}（この字ランク：${state.progress[kanji] || 0}）`
+              };
+              viewQuestion(q);
+
+            } catch (err) {
+              console.error(err);
+              viewErrorLoad(kanji, err,
+                () => doLoad(), // Retry
+                () => {         // Skip
+                  state.session.total += 1;
+                  state.session.done += 1;
+                  renderHud();
+                  isNextRunning = false;
+                  next();
+                }
+              );
+            }
           };
-          viewQuestion(q);
+
+          await doLoad();
           return;
         }
 
@@ -1113,18 +1200,12 @@
           }
         }
       } catch (err) {
+        // Fallback for other errors
         console.error(err);
-        viewError(
-          "かきじゅん（エラー）",
-          "書き順データが取れませんでした。\n\n" +
-          "・ネット接続が弱い\n" +
-          "・学校/会社Wi-FiでCDNがブロック\n" +
-          "・一時的な通信不安定\n\n" +
-          "対策：モバイル回線で試す / 共有→Safariで開く / もう一度\n\n" +
-          "エラー：" + (err?.message || String(err))
-        );
+        toast("システムエラー");
       } finally {
-        isNextRunning = false;
+        if (state.mode !== "kakijun") isNextRunning = false;
+        // Note: kakijun handles isNextRunning=false internally when it finishes or skips
       }
     }
 
@@ -1155,12 +1236,21 @@
         if (state.mode === "kakuSelect") tryRankUp(q.kanji, 2);
         if (state.mode === "kakijun") tryRankUp(q.kanji, 3);
 
-        toast("せいかい！");
-        setTimeout(next, 260);
+        showFeedback(true, "せいかい！");
+        setTimeout(() => {
+          state.blocking = false; // unlock handled by screen() clearing, but explicit here too
+          isNextRunning = false;  // Ensure next can run
+          next();
+        }, 700);
       } else {
         addMistake(q.kanji);
-        toast(`ざんねん… こたえ：${q.answer}`);
-        setTimeout(next, 520);
+        showFeedback(false, "ざんねん…");
+        toast(`こたえ：${q.answer}`); // Toast specifically for the answer
+        setTimeout(() => {
+          state.blocking = false;
+          isNextRunning = false;
+          next();
+        }, 1200);
       }
     }
 
