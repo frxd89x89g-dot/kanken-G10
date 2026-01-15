@@ -519,7 +519,7 @@ function codepointHex(ch){ return ch.codePointAt(0).toString(16).padStart(5,"0")
 
 function kvgUrlFor(ch){
   const hex = codepointHex(ch);
-  return `https://cdn.jsdelivr.net/gh/KanjiVG/kanjivg@master/kanji/${hex}.svg`;
+  return `kanji-svg/${hex}.svg`;
 }
 
 function parseKanjiVG(svgText){
