@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>かんけん10きゅう｜かきじゅん</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  background: #fefce8;
+  color: #444;
+  text-align: center;
+}
+
+.container {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.kanji {
+  font-size: 120px;
+  margin: 20px 0;
+}
+
+.question {
+  font-size: 18px;
+  margin-bottom: 16px;
+}
+
+button {
+  width: 100%;
+  padding: 14px;
+  margin: 8px 0;
+  font-size: 18px;
+  border-radius: 12px;
+  border: none;
+  background: #e0f2fe;
+}
+
+.correct {
+  background: #bbf7d0 !important;
+}
+
+.wrong {
+  background: #fecaca !important;
+}
+
+.result {
+  font-size: 28px;
+  font-weight: bold;
+  margin: 16px 0;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>✏️ かきじゅんクイズ</h1>
+
+<div id="kanji" class="kanji"></div>
+<div id="question" class="question"></div>
+
+<div id="buttons"></div>
+
+<div id="result" class="result"></div>
+
+</div>
+
+<script>
+// ====== 完全内蔵データ（漢検10級） ======
+const DATA = [
+  { k: "一", s: 1 },
+  { k: "二", s: 2 },
+  { k: "三", s: 3 },
+  { k: "四", s: 5 },
+  { k: "五", s: 4 },
+  { k: "六", s: 4 },
+  { k: "七", s: 2 },
+  { k: "八", s: 2 },
+  { k: "九", s: 2 },
+  { k: "十", s: 2 },
+  { k: "山", s: 3 },
+  { k: "川", s: 3 },
+  { k: "田", s: 5 },
+  { k: "口", s: 3 },
+  { k: "日", s: 4 },
+  { k: "月", s: 4 },
+  { k: "木", s: 4 },
+  { k: "人", s: 2 }
+];
+
+let index = 0;
+
+function shuffle(arr) {
+  return [...arr].sort(() => Math.random() - 0.5);
+}
+
+function showQuestion() {
+  const item = DATA[index];
+  document.getElementById("kanji").textContent = item.k;
+  document.getElementById("question").textContent =
+    "なんかくめ？";
+
+  document.getElementById("result").textContent = "";
+
+  const choices = shuffle([item.s, item.s + 1, Math.max(1, item.s - 1)]);
+  const buttons = document.getElementById("buttons");
+  buttons.innerHTML = "";
+
+  choices.forEach(num => {
+    const btn = document.createElement("button");
+    btn.textContent = `${num} かく`;
+    btn.onclick = () => check(num, btn);
+    buttons.appendChild(btn);
+  });
+}
+
+function check(answer, btn) {
+  const correct = DATA[index].s;
+  const result = document.getElementById("result");
+
+  if (answer === correct) {
+    btn.classList.add("correct");
+    result.textContent = "⭕ せいかい！";
+    index = (index + 1) % DATA.length;
+    setTimeout(showQuestion, 800);
+  } else {
+    btn.classList.add("wrong");
+    result.textContent = "❌ ざんねん";
+  }
+}
+
+showQuestion();
+</script>
+
+</body>
+</html>
