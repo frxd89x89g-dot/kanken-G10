@@ -514,12 +514,12 @@
         if (k === "class") n.className = v;
         else if (k === "style") n.setAttribute("style", v);
         else if (k.startsWith("on") && typeof v === "function") {
-          const ev = k.slice(2).toLowerCase(); // onClick -> click
-          // ✅ clickが死ぬ端末でも拾う
-          n.addEventListener(ev, v);
+          const ev = k.slice(2).toLowerCase();
+          // ✅ FIX: Use ONLY ONE event type (pointerup) to prevent double-firing
           if (ev === "click") {
             n.addEventListener("pointerup", (e) => { e.preventDefault(); v(e); });
-            n.addEventListener("touchend", (e) => { e.preventDefault(); v(e); }, { passive: false });
+          } else {
+            n.addEventListener(ev, v);
           }
         } else n.setAttribute(k, v);
       }
@@ -530,7 +530,12 @@
       });
       return n;
     }
-    function screen(node) { root.innerHTML = ""; root.appendChild(node); }
+
+    function screen(node) {
+      root.innerHTML = "";
+      root.appendChild(node);
+      state.blocking = false; // ✅ FIX: Unlock input when screen updates
+    }
 
     /** 10級 80字（固定） */
     const KANJI_10 = [
@@ -641,6 +646,7 @@
 
     const state = {
       mode: "home",
+      blocking: false, // ✅ FIX: Execution guard
       progress: {},
       mistakes: {},
       session: {
@@ -738,7 +744,7 @@
 
     function kvgUrlFor(ch) {
       const hex = codepointHex(ch);
-      return `./kanji-svg/${hex}.svg`;
+      return `./kanji-svg/${hex}.svg`; // ✅ FIX: Local path
     }
 
     function parseKanjiVG(svgText) {
@@ -762,6 +768,7 @@
 
       const url = kvgUrlFor(ch);
 
+      // ✅ FIX: Promise.race with timeout
       const res = await Promise.race([
         fetch(url, { cache: "no-store" }),
         new Promise((_, reject) =>
@@ -1114,6 +1121,9 @@
 
     /* ---------- 判定 ---------- */
     function judge(q, picked) {
+      if (state.blocking) return; // ✅ FIX: Prevent re-entry
+      state.blocking = true;
+
       showExplain();
 
       state.session.total += 1;
