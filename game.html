@@ -278,31 +278,7 @@
       display: none;
     }
 
-    /* ✅ Overlay Feedback */
-    .feedback-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 100;
-      display: none;
-      justify-content: center;
-      align-items: center;
-      background: rgba(255, 255, 255, 0.85);
-      font-size: 48px;
-      font-weight: 1200;
-      animation: pop .1s ease;
-      text-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .feedback-correct {
-      color: #22c55e;
-    }
-
-    .feedback-wrong {
-      color: #ef4444;
-    }
-
     .toast {
-      /* Keep existing toast if needed, but overlay is primary */
       position: fixed;
       left: 50%;
       bottom: 14px;
@@ -479,9 +455,8 @@
   </header>
 
   <main id="root"></main>
-
-  <div class="feedback-overlay" id="feedback"></div>
   <div class="toast" id="toast"></div>
+<div class="result" id="result"><div class="resultBox" id="resultBox"></div></div>
 
   <div class="fatal" id="fatal">
     <h2>エラーで停止しました</h2>
@@ -501,7 +476,8 @@
 
     const root = document.getElementById("root");
     const toastEl = document.getElementById("toast");
-    const feedbackEl = document.getElementById("feedback");
+const resultEl = document.getElementById("result");
+const resultBoxEl = document.getElementById("resultBox");
     const levelEl = document.getElementById("level");
     const masteredEl = document.getElementById("mastered");
     const todayDoneEl = document.getElementById("todayDone");
@@ -521,16 +497,6 @@
       clearTimeout(toast._t);
       toast._t = setTimeout(() => toastEl.style.display = "none", 1200);
     }
-
-    function showFeedback(isCorrect, msg) {
-      feedbackEl.className = "feedback-overlay " + (isCorrect ? "feedback-correct" : "feedback-wrong");
-      feedbackEl.innerHTML = msg;
-      feedbackEl.style.display = "flex";
-      setTimeout(() => {
-        feedbackEl.style.display = "none";
-      }, 700);
-    }
-
     function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
     function shuffle(arr) {
       const a = [...arr];
@@ -551,12 +517,20 @@
         if (k === "class") n.className = v;
         else if (k === "style") n.setAttribute("style", v);
         else if (k.startsWith("on") && typeof v === "function") {
-          const ev = k.slice(2).toLowerCase();
-          // ✅ FIX: Use ONLY ONE event type (pointerup) to prevent double-firing
+          const ev = k.slice(2).toLowerCase(); // onClick -> click
+          // ✅ クリック二重発火（1問飛ばし）を防ぐガード付き
+          let lastFire = 0;
+          const fire = (e) => {
+            const now = Date.now();
+            if (now - lastFire < 350) return; // 二重タップ/二重イベント抑止
+            lastFire = now;
+            v(e);
+          };
+          n.addEventListener(ev, fire);
           if (ev === "click") {
-            n.addEventListener("pointerup", (e) => { e.preventDefault(); v(e); });
-          } else {
-            n.addEventListener(ev, v);
+            // 端末によって click が遅延/不安定な場合の保険（同じfireで統一）
+            n.addEventListener("pointerup", (e) => { e.preventDefault(); fire(e); });
+            n.addEventListener("touchend", (e) => { e.preventDefault(); fire(e); }, { passive: false });
           }
         } else n.setAttribute(k, v);
       }
@@ -567,15 +541,7 @@
       });
       return n;
     }
-
-    // ✅ UI lock management
-    let isNextRunning = false;
-
-    function screen(node) {
-      root.innerHTML = "";
-      root.appendChild(node);
-      state.blocking = false; // ✅ FIX: Unlock input when screen updates
-    }
+    function screen(node) { root.innerHTML = ""; root.appendChild(node); }
 
     /** 10級 80字（固定） */
     const KANJI_10 = [
@@ -682,11 +648,9 @@
 
     /* ---------- Save / State ---------- */
     const STORAGE_KEY = "kanken10_master_v2";
-    const STROKE_CACHE_KEY = "kvgStrokeCache_10kyu_v2";
-
+    
     const state = {
       mode: "home",
-      blocking: false, // ✅ FIX: Execution guard
       progress: {},
       mistakes: {},
       session: {
@@ -776,73 +740,33 @@
       return shuffle([...pool]);
     }
 
-    /* ---------- 書き順：KanjiVG ---------- */
-    let strokeCache = {};
-    try { strokeCache = JSON.parse(localStorage.getItem(STROKE_CACHE_KEY) || "{}"); } catch (e) { strokeCache = {}; }
+    /* ---------- 書き順：ローカル strokes.json（ネット不要） ---------- */
+let strokesData = null;
+let strokesLoading = null;
 
-    function codepointHex(ch) { return ch.codePointAt(0).toString(16).padStart(5, "0"); }
+async function loadStrokesData(){
+  if(strokesData) return strokesData;
+  if(strokesLoading) return strokesLoading;
+  strokesLoading = (async ()=>{
+    const res = await fetch("strokes.json", { cache:"force-cache" });
+    if(!res.ok) throw new Error("strokes.json が見つかりません（" + res.status + "）");
+    const json = await res.json();
+    if(!json || !json.strokes) throw new Error("strokes.json の形式が不正です");
+    strokesData = json.strokes;
+    return strokesData;
+  })();
+  return strokesLoading;
+}
 
-    function kvgUrlFor(ch) {
-      const hex = codepointHex(ch);
-      return `./kanji-svg/${hex}.svg`; // ✅ FIX: Local path
-    }
+async function getStrokes(ch){
+  const data = await loadStrokesData();
+  const ds = data[ch];
+  if(ds && ds.length) return ds;
+  throw new Error("この字の書き順データがありません：" + ch);
+}
 
-    function parseKanjiVG(svgText) {
-      const doc = new DOMParser().parseFromString(svgText, "image/svg+xml");
-      const paths = Array.from(doc.querySelectorAll("path"))
-        .map(p => ({ id: p.getAttribute("id") || "", d: p.getAttribute("d") || "" }))
-        .filter(x => x.d && /-s\d+/.test(x.id));
 
-      paths.sort((a, b) => {
-        const na = parseInt((a.id.match(/-s(\d+)/) || [])[1] || "9999", 10);
-        const nb = parseInt((b.id.match(/-s(\d+)/) || [])[1] || "9999", 10);
-        return na - nb;
-      });
-
-      const ds = paths.map(x => x.d);
-      return ds.length ? ds : null;
-    }
-
-    // ✅ FIX: Strict fetch with timeout helper
-    async function fetchStrokeData(url, timeoutMs = 5000) {
-      return Promise.race([
-        (async () => {
-          const res = await fetch(url, { cache: "no-store" });
-          if (!res.ok) throw new Error("Status " + res.status);
-          const txt = await res.text();
-          const ds = parseKanjiVG(txt);
-          if (!ds) throw new Error("No paths parsed");
-          return ds;
-        })(),
-        new Promise((_, r) => setTimeout(() => r(new Error("Timeout " + timeoutMs + "ms")), timeoutMs))
-      ]);
-    }
-
-    async function getStrokes(ch) {
-      if (strokeCache[ch]?.ds) return strokeCache[ch].ds;
-
-      let url = kvgUrlFor(ch);
-      try {
-        // Attempt 1
-        const ds = await fetchStrokeData(url, 5000);
-        strokeCache[ch] = { ds, t: Date.now() };
-        localStorage.setItem(STROKE_CACHE_KEY, JSON.stringify(strokeCache));
-        return ds;
-      } catch (e1) {
-        // Retry with cache buster
-        try {
-          const retryUrl = url + "?t=" + Date.now();
-          const ds = await fetchStrokeData(retryUrl, 5000);
-          strokeCache[ch] = { ds, t: Date.now() };
-          localStorage.setItem(STROKE_CACHE_KEY, JSON.stringify(strokeCache));
-          return ds;
-        } catch (e2) {
-          throw new Error(`Failed loading ${ch} (${url}): ${e2.message}`);
-        }
-      }
-    }
-
-    function makeStrokeSvg(ds, redIndex) {
+function makeStrokeSvg(ds, redIndex) {
       const svgNS = "http://www.w3.org/2000/svg";
       const svg = document.createElementNS(svgNS, "svg");
       svg.setAttribute("viewBox", "0 0 109 109");
@@ -909,41 +833,32 @@
         ]),
         el("div", { class: "footerNote" },
           "各モードは 20問で おわるよ（模試は10問）。\n" +
-          "書き順は KanjiVG のストローク順SVGを利用（初回ネット必要）。\n" +
+          "書き順はローカルの strokes.json を利用（ネット不要）。\n" +
           "© KanjiVG: CC BY-SA 3.0"
         )
       ]);
       screen(card);
     }
 
-    // ✅ FIX: Enhanced loading screen
-    function viewLoading(kanji, url, onRetry, onSkip) {
+    function viewLoading(tagText, msg) {
       const card = el("div", { class: "screen" }, [
-        el("div", { class: "tag" }, "かきじゅん"),
+        el("div", { class: "tag" }, tagText),
         el("div", { class: "loading" }, [
           el("div", { class: "spinner" }),
-          el("div", {}, `「${kanji}」を よみこみちゅう…`),
-          el("div", { style: "font-size:10px;color:#94a3b8;margin-top:8px;" }, url)
+          el("div", {}, msg || "よみこみちゅう…")
         ]),
-        el("div", { style: "display:flex;gap:10px;margin-top:10px;" }, [
-          onRetry ? el("button", { class: "btn btnWide", type: "button", onClick: onRetry }, "もういちど") : null,
-          onSkip ? el("button", { class: "btn btnWide", type: "button", onClick: onSkip }, "スキップする") : null
-        ]),
-        el("button", { class: "btn btnWide btnAccent", style: "margin-top:10px;", type: "button", onClick: viewHome }, "メニューにもどる")
+        el("button", { class: "btn btnWide btnAccent", type: "button", onClick: viewHome }, "メニューにもどる")
       ]);
       screen(card);
     }
 
-    function viewErrorLoad(kanji, err, onRetry, onSkip) {
+    function viewError(tagText, msg) {
       const card = el("div", { class: "screen" }, [
-        el("div", { class: "tag" }, "エラー"),
-        el("div", { class: "title", style: "margin-top:18px;font-size:30px;color:#ef4444;" }, "よみこめない…"),
-        el("div", { class: "warn" }, `「${kanji}」のデータありませんでした。\n${err.message}`),
-        el("div", { style: "display:flex;gap:10px;margin-top:10px;" }, [
-          el("button", { class: "btn btnWide", type: "button", onClick: onRetry }, "もういちど"),
-          el("button", { class: "btn btnWide", type: "button", onClick: onSkip }, "スキップ")
-        ]),
-        el("button", { class: "btn btnWide btnAccent", style: "margin-top:10px;", type: "button", onClick: viewHome }, "メニューにもどる")
+        el("div", { class: "tag" }, tagText),
+        el("div", { class: "title", style: "margin-top:18px;font-size:30px;color:#ef4444;" }, "とれなかった…"),
+        el("div", { class: "warn" }, msg),
+        el("button", { class: "btn btnWide", type: "button", onClick: () => startMode("kakijun") }, "もういちど（かきじゅん）"),
+        el("button", { class: "btn btnWide btnAccent", type: "button", onClick: viewHome }, "メニューにもどる")
       ]);
       screen(card);
     }
@@ -1061,16 +976,12 @@
     }
 
     async function next() {
-      // ✅ FIX: Concurrent execution guard
-      if (isNextRunning) return;
-      isNextRunning = true;
+      if (state.session.done >= state.session.limit) {
+        viewResult();
+        return;
+      }
 
       try {
-        if (state.session.done >= state.session.limit) {
-          viewResult();
-          return;
-        }
-
         if (state.mode === "yomi") {
           const kanji = weightedPickKanji();
           const rd = READING[kanji];
@@ -1108,60 +1019,30 @@
 
         if (state.mode === "kakijun") {
           const kanji = weightedPickKanji();
+          viewLoading("かきじゅん（2→3）", `「${kanji}」の データを よみこみちゅう…`);
 
-          /* ✅ FIX: Retry / Skip Logic */
-          const doLoad = async () => {
-            // Show loading with retry/skip attached
-            viewLoading(kanji, kvgUrlFor(kanji),
-              () => doLoad(), // Retry
-              () => {         // Skip
-                state.session.total += 1;
-                state.session.done += 1;
-                renderHud();
-                isNextRunning = false;
-                next();
-              }
-            );
+          const ds = await getStrokes(kanji);
+          const total = ds.length;
 
-            try {
-              const ds = await getStrokes(kanji);
-              const total = ds.length;
-              const redIndex = 1 + Math.floor(Math.random() * total);
-              const choiceNums = new Set([redIndex]);
-              while (choiceNums.size < 3) {
-                const delta = [-2, -1, 1, 2][Math.floor(Math.random() * 4)];
-                choiceNums.add(clamp(redIndex + delta, 1, total));
-              }
-              const choices = shuffle([...choiceNums].map(n => `${n}かくめ`));
+          const redIndex = 1 + Math.floor(Math.random() * total);
+          const choiceNums = new Set([redIndex]);
+          while (choiceNums.size < 3) {
+            const delta = [-2, -1, 1, 2][Math.floor(Math.random() * 4)];
+            choiceNums.add(clamp(redIndex + delta, 1, total));
+          }
+          const choices = shuffle([...choiceNums].map(n => `${n}かくめ`));
 
-              const q = {
-                type: "kakijun",
-                tag: "かきじゅん（2→3）",
-                kanji,
-                svgNode: makeStrokeSvg(ds, redIndex),
-                choices,
-                answer: `${redIndex}かくめ`,
-                explain: `「${kanji}」は ぜんぶで ${total}かく。`,
-                counterText: `もんだい ${state.session.done + 1}/${state.session.limit}（この字ランク：${state.progress[kanji] || 0}）`
-              };
-              viewQuestion(q);
-
-            } catch (err) {
-              console.error(err);
-              viewErrorLoad(kanji, err,
-                () => doLoad(), // Retry
-                () => {         // Skip
-                  state.session.total += 1;
-                  state.session.done += 1;
-                  renderHud();
-                  isNextRunning = false;
-                  next();
-                }
-              );
-            }
+          const q = {
+            type: "kakijun",
+            tag: "かきじゅん（2→3）",
+            kanji,
+            svgNode: makeStrokeSvg(ds, redIndex),
+            choices,
+            answer: `${redIndex}かくめ`,
+            explain: `「${kanji}」は ぜんぶで ${total}かく。`,
+            counterText: `もんだい ${state.session.done + 1}/${state.session.limit}（この字ランク：${state.progress[kanji] || 0}）`
           };
-
-          await doLoad();
+          viewQuestion(q);
           return;
         }
 
@@ -1200,20 +1081,21 @@
           }
         }
       } catch (err) {
-        // Fallback for other errors
         console.error(err);
-        toast("システムエラー");
-      } finally {
-        if (state.mode !== "kakijun") isNextRunning = false;
-        // Note: kakijun handles isNextRunning=false internally when it finishes or skips
+        viewError(
+          "かきじゅん（エラー）",
+          "書き順データが読み込めませんでした。\n\n" +
+          "・strokes.json が未配置 / パスが違う\n" +
+          "・GitHub Pagesに反映前（キャッシュ）\n" +
+          "・この字のデータが未収録\n\n" +
+          "対策：strokes.json を game.html と同じ場所に置く → 再アップ → ハードリロード（⌘⇧R）\n\n" +
+          "エラー：" + (err?.message || String(err))
+        );
       }
     }
 
     /* ---------- 判定 ---------- */
     function judge(q, picked) {
-      if (state.blocking) return; // ✅ FIX: Prevent re-entry
-      state.blocking = true;
-
       showExplain();
 
       state.session.total += 1;
@@ -1236,21 +1118,14 @@
         if (state.mode === "kakuSelect") tryRankUp(q.kanji, 2);
         if (state.mode === "kakijun") tryRankUp(q.kanji, 3);
 
-        showFeedback(true, "せいかい！");
-        setTimeout(() => {
-          state.blocking = false; // unlock handled by screen() clearing, but explicit here too
-          isNextRunning = false;  // Ensure next can run
-          next();
-        }, 700);
+        showResultOverlay(true, "せいかい！");
+    toast("せいかい！");
+        setTimeout(next, 260);
       } else {
         addMistake(q.kanji);
-        showFeedback(false, "ざんねん…");
-        toast(`こたえ：${q.answer}`); // Toast specifically for the answer
-        setTimeout(() => {
-          state.blocking = false;
-          isNextRunning = false;
-          next();
-        }, 1200);
+        showResultOverlay(false, "ざんねん…", `こたえ：${q.answer}`);
+    toast(`ざんねん… こたえ：${q.answer}`);
+        setTimeout(next, 520);
       }
     }
 
@@ -1259,9 +1134,7 @@
     document.getElementById("resetBtn").addEventListener("click", () => {
       if (confirm("学習データをリセットしますか？（ランク・苦手記録が消えます）")) {
         localStorage.removeItem(STORAGE_KEY);
-        localStorage.removeItem(STROKE_CACHE_KEY);
-        strokeCache = {};
-        state.progress = {};
+                state.progress = {};
         state.mistakes = {};
         initProgress();
         save();
