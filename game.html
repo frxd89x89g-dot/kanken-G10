@@ -531,6 +531,9 @@
       return n;
     }
 
+    // ✅ UI lock management
+    let isNextRunning = false;
+
     function screen(node) {
       root.innerHTML = "";
       root.appendChild(node);
@@ -1001,12 +1004,16 @@
     }
 
     async function next() {
-      if (state.session.done >= state.session.limit) {
-        viewResult();
-        return;
-      }
+      // ✅ FIX: Concurrent execution guard
+      if (isNextRunning) return;
+      isNextRunning = true;
 
       try {
+        if (state.session.done >= state.session.limit) {
+          viewResult();
+          return;
+        }
+
         if (state.mode === "yomi") {
           const kanji = weightedPickKanji();
           const rd = READING[kanji];
@@ -1116,6 +1123,8 @@
           "対策：モバイル回線で試す / 共有→Safariで開く / もう一度\n\n" +
           "エラー：" + (err?.message || String(err))
         );
+      } finally {
+        isNextRunning = false;
       }
     }
 
