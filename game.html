@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>漢検10級マスター（読み・書き・書き順）</title>
+<style>
+:root{--bg:#eef7ff;--card:#fff;--text:#0f172a;--muted:#64748b;--blue:#60a5fa;--yellow:#fbbf24;--good:#22c55e;--bad:#ef4444;--shadow:0 12px 30px rgba(0,0,0,.08);--r:18px}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;background:var(--bg);color:var(--text);user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+header{position:fixed;inset:0 0 auto 0;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px;background:rgba(255,255,255,.86);backdrop-filter:blur(10px);border-bottom:1px solid rgba(0,0,0,.06);z-index:10}
+.hud{display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-weight:900}
+.pill{background:#fff;border:1px solid rgba(0,0,0,.06);box-shadow:var(--shadow);padding:8px 10px;border-radius:999px;font-size:14px;white-space:nowrap}
+.btnGhost{background:#fff;border:1px solid rgba(0,0,0,.08);box-shadow:var(--shadow);padding:10px 12px;border-radius:999px;font-weight:900;cursor:pointer}
+.btnGhost:active{transform:translateY(1px)}
+main{position:fixed;inset:74px 0 0 0;display:flex;justify-content:center;align-items:center;padding:14px}
+.card{width:min(580px,94vw);background:var(--card);border:1px solid rgba(0,0,0,.06);border-radius:var(--r);box-shadow:var(--shadow);padding:18px;position:relative}
+.tag{position:absolute;top:14px;left:14px;background:#e8f3ff;color:#1d4ed8;border-radius:999px;padding:6px 10px;font-weight:900;font-size:13px}
+.title{margin:36px 0 8px;text-align:center;font-size:36px;font-weight:1000;color:#2563eb}
+.subtitle{text-align:center;margin:0 0 14px;font-weight:900;color:#f43f5e}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.btn{border:0;border-radius:14px;padding:14px 12px;font-weight:1000;cursor:pointer;background:#bfe0ff;color:#0b3b73;box-shadow:inset 0 -3px 0 rgba(0,0,0,.08);font-size:16px}
+.btn:active{transform:translateY(1px);box-shadow:inset 0 -2px 0 rgba(0,0,0,.08)}
+.btnAccent{background:#fde68a;color:#5b3a00}
+.btnWide{width:100%}
+.bigKanji{font-size:96px;text-align:center;line-height:1;margin:18px 0 6px;font-weight:1100}
+.bigKana{font-size:56px;text-align:center;line-height:1.2;margin:22px 0 6px;font-weight:1100}
+.prompt{text-align:center;font-weight:1000;color:#334155;margin:8px 0 10px}
+.counter{text-align:center;color:var(--muted);font-weight:900;font-size:13px;margin:6px 0 0}
+.choices{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.choice{width:100%;background:#bfe0ff;border:1px solid rgba(0,0,0,.06);border-radius:14px;padding:14px 12px;font-weight:1100;font-size:20px;text-align:center;cursor:pointer;box-shadow:inset 0 -3px 0 rgba(0,0,0,.08)}
+.choice:active{transform:translateY(1px);box-shadow:inset 0 -2px 0 rgba(0,0,0,.08)}
+.explain{margin-top:10px;font-weight:900;color:var(--muted);text-align:center;font-size:13px;display:none}
+.svgBox{width:240px;height:240px;margin:18px auto 8px;display:flex;justify-content:center;align-items:center;background:#fff;border-radius:16px;border:1px solid rgba(0,0,0,.06);box-shadow:inset 0 -3px 0 rgba(0,0,0,.05)}
+svg{width:220px;height:220px}
+.strokeBase{stroke:#111827;stroke-width:9;fill:none;stroke-linecap:round;stroke-linejoin:round;opacity:.18}
+.strokeRed{stroke:#ff2d55;stroke-width:14;fill:none;stroke-linecap:round;stroke-linejoin:round;opacity:1;filter:drop-shadow(0 2px 0 rgba(0,0,0,.08))}
+.loading{text-align:center;color:var(--muted);font-weight:1000;padding:40px 0 18px}
+.spinner{width:34px;height:34px;border-radius:50%;border:4px solid #dbeafe;border-top-color:#2563eb;margin:0 auto 12px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.note{margin-top:12px;font-size:12px;color:var(--muted);font-weight:800;line-height:1.4;text-align:center;white-space:pre-line}
+.warn{background:#fff7ed;border:1px solid rgba(0,0,0,.06);border-radius:14px;padding:10px 12px;font-weight:900;color:#7c2d12;margin-top:12px;white-space:pre-line;line-height:1.4}
+/* big feedback */
+.feedback{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:999;background:rgba(255,255,255,.88)}
+.feedbackBox{width:min(520px,92vw);border-radius:22px;padding:22px;box-shadow:var(--shadow);text-align:center;border:1px solid rgba(0,0,0,.06)}
+.fbEmoji{font-size:64px;line-height:1;margin:2px 0 8px}
+.fbText{font-size:44px;font-weight:1100;margin:0}
+.fbSub{margin:10px 0 0;font-weight:950;font-size:18px}
+</style>
+</head>
+<body>
+<header>
+  <div class="hud">
+    <div class="pill">Lv.<span id="level">1</span></div>
+    <div class="pill">完成(ランク3) <span id="mastered">0</span>/80</div>
+    <div class="pill">このセット <span id="done">0</span>/<span id="limit">20</span></div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center;">
+    <button class="btnGhost" id="homeBtn" type="button">ホーム</button>
+    <button class="btnGhost" id="resetBtn" type="button" title="学習データを初期化します">リセット</button>
+  </div>
+</header>
+<main id="root"></main>
+<div class="feedback" id="feedback">
+  <div class="feedbackBox" id="feedbackBox">
+    <div class="fbEmoji" id="fbEmoji">✅</div>
+    <p class="fbText" id="fbText">せいかい！</p>
+    <div class="fbSub" id="fbSub"></div>
+  </div>
+</div>
+<script>
+/* =========================================================
+   ゼロから作り直し版：外部通信なし（書き順は strokes.json を同梱）
+   - 読み / 選択して書き / 書き順（赤い線が何画目か）
+   - iPhoneで確実に反応する：ボタンは click のみ（2重発火させない）
+   ========================================================= */
+
+const root = document.getElementById('root');
+const levelEl = document.getElementById('level');
+const masteredEl = document.getElementById('mastered');
+const doneEl = document.getElementById('done');
+const limitEl = document.getElementById('limit');
+
+const fb = document.getElementById('feedback');
+const fbBox = document.getElementById('feedbackBox');
+const fbEmoji = document.getElementById('fbEmoji');
+const fbText = document.getElementById('fbText');
+const fbSub = document.getElementById('fbSub');
+
+document.addEventListener('touchstart', ()=>{}, {passive:true});
+
+function el(tag, attrs={}, children=[]){
+  const n = document.createElement(tag);
+  for(const [k,v] of Object.entries(attrs)){
+    if(k==='class') n.className = v;
+    else if(k==='style') n.setAttribute('style', v);
+    else if(k==='onClick') n.addEventListener('click', v);
+    else n.setAttribute(k, v);
+  }
+  (Array.isArray(children)?children:[children]).forEach(c=>{
+    if(c==null) return;
+    n.appendChild(typeof c==='string' ? document.createTextNode(c) : c);
+  });
+  return n;
+}
+function screen(node){ root.innerHTML=''; root.appendChild(node); }
+function shuffle(a){ const x=[...a]; for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]];} return x; }
+function clamp(n,min,max){ return Math.max(min, Math.min(max,n)); }
+
+const KANJI = [
+  "一","右","雨","円","王","音","下","火","花","貝",
+  "学","気","九","休","玉","金","空","月","犬","見",
+  "五","口","校","左","三","山","子","四","糸","字",
+  "耳","七","車","手","十","出","女","小","上","森",
+  "人","水","正","生","青","夕","石","赤","千","川",
+  "先","早","草","足","村","大","男","竹","中","虫",
+  "町","天","田","土","二","日","入","年","白","八",
+  "百","文","木","本","名","目","立","力","林","六"
+];
+
+// 読み：生活で使う形に寄せつつ、迷うものは許容を入れる（例：一=いち/ひと）
+const READING = {
+  "一":{main:"いち", ok:["いち","ひと"]},
+  "右":{main:"みぎ", ok:["みぎ"]},
+  "雨":{main:"あめ", ok:["あめ"]},
+  "円":{main:"えん", ok:["えん"]},
+  "王":{main:"おう", ok:["おう"]},
+  "音":{main:"おと", ok:["おと"]},
+  "下":{main:"した", ok:["した"]},
+  "火":{main:"ひ", ok:["ひ"]},
+  "花":{main:"はな", ok:["はな"]},
+  "貝":{main:"かい", ok:["かい"]},
+  "学":{main:"がく", ok:["がく","まなぶ"]},
+  "気":{main:"き", ok:["き"]},
+  "九":{main:"きゅう", ok:["きゅう"]},
+  "休":{main:"やすむ", ok:["やすむ","やす"]},
+  "玉":{main:"たま", ok:["たま"]},
+  "金":{main:"きん", ok:["きん","かね"]},
+  "空":{main:"そら", ok:["そら"]},
+  "月":{main:"つき", ok:["つき"]},
+  "犬":{main:"いぬ", ok:["いぬ"]},
+  "見":{main:"みる", ok:["みる"]},
+  "五":{main:"ご", ok:["ご"]},
+  "口":{main:"くち", ok:["くち"]},
+  "校":{main:"こう", ok:["こう"]},
+  "左":{main:"ひだり", ok:["ひだり"]},
+  "三":{main:"さん", ok:["さん"]},
+  "山":{main:"やま", ok:["やま"]},
+  "子":{main:"こ", ok:["こ"]},
+  "四":{main:"よん", ok:["よん","し"]},
+  "糸":{main:"いと", ok:["いと"]},
+  "字":{main:"じ", ok:["じ"]},
+  "耳":{main:"みみ", ok:["みみ"]},
+  "七":{main:"なな", ok:["なな","しち"]},
+  "車":{main:"くるま", ok:["くるま"]},
+  "手":{main:"て", ok:["て"]},
+  "十":{main:"じゅう", ok:["じゅう","とお"]},
+  "出":{main:"でる", ok:["でる","だす"]},
+  "女":{main:"おんな", ok:["おんな"]},
+  "小":{main:"ちいさい", ok:["ちいさい","ちい"]},
+  "上":{main:"うえ", ok:["うえ"]},
+  "森":{main:"もり", ok:["もり"]},
+  "人":{main:"ひと", ok:["ひと"]},
+  "水":{main:"みず", ok:["みず"]},
+  // 正：子ども向けは「ただしい」でOK。短縮「ただ」は読みとしては中途半端なので入れない。
+  "正":{main:"ただしい", ok:["ただしい"]},
+  "生":{main:"いきる", ok:["いきる","なま"]},
+  "青":{main:"あお", ok:["あお"]},
+  "夕":{main:"ゆう", ok:["ゆう"]},
+  "石":{main:"いし", ok:["いし"]},
+  "赤":{main:"あか", ok:["あか"]},
+  "千":{main:"せん", ok:["せん"]},
+  "川":{main:"かわ", ok:["かわ"]},
+  "先":{main:"さき", ok:["さき"]},
+  "早":{main:"はやい", ok:["はやい"]},
+  "草":{main:"くさ", ok:["くさ"]},
+  "足":{main:"あし", ok:["あし"]},
+  "村":{main:"むら", ok:["むら"]},
+  "大":{main:"おおきい", ok:["おおきい","おお"]},
+  "男":{main:"おとこ", ok:["おとこ"]},
+  "竹":{main:"たけ", ok:["たけ"]},
+  "中":{main:"なか", ok:["なか"]},
+  "虫":{main:"むし", ok:["むし"]},
+  "町":{main:"まち", ok:["まち"]},
+  "天":{main:"てん", ok:["てん"]},
+  "田":{main:"た", ok:["た"]},
+  "土":{main:"つち", ok:["つち"]},
+  "二":{main:"に", ok:["に"]},
+  "日":{main:"ひ", ok:["ひ"]},
+  // 入：生活では「はいる」なのでこれでOK。必要なら「いる/いれる」を追加可能。
+  "入":{main:"はいる", ok:["はいる"]},
+  "年":{main:"とし", ok:["とし","ねん"]},
+  "白":{main:"しろ", ok:["しろ"]},
+  "八":{main:"はち", ok:["はち"]},
+  "百":{main:"ひゃく", ok:["ひゃく"]},
+  "文":{main:"ぶん", ok:["ぶん"]},
+  "木":{main:"き", ok:["き"]},
+  "本":{main:"ほん", ok:["ほん"]},
+  "名":{main:"なまえ", ok:["なまえ"]},
+  "目":{main:"め", ok:["め"]},
+  "立":{main:"たつ", ok:["たつ"]},
+  "力":{main:"ちから", ok:["ちから"]},
+  "林":{main:"はやし", ok:["はやし"]},
+  "六":{main:"ろく", ok:["ろく"]}
+};
+
+const STORAGE_KEY = 'kanken10_zero_v1';
+const state = {
+  mode: 'home',
+  progress: {},
+  mistakes: {},
+  session: { limit:20, done:0, correct:0, total:0 },
+};
+
+function init(){
+  for(const k of KANJI){ if(typeof state.progress[k] !== 'number') state.progress[k]=0; }
+}
+function load(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const s = JSON.parse(raw);
+      state.progress = s.progress || {};
+      state.mistakes = s.mistakes || {};
+    }
+  }catch(e){}
+  init();
+}
+function save(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({progress: state.progress, mistakes: state.mistakes}));
+}
+function masteredCount(){ return Object.values(state.progress).filter(v=>v===3).length; }
+function calcLevel(){ return Math.floor(masteredCount()/10)+1; }
+function renderHud(){
+  levelEl.textContent = String(calcLevel());
+  masteredEl.textContent = String(masteredCount());
+  doneEl.textContent = String(state.session.done||0);
+  limitEl.textContent = String(state.session.limit||20);
+}
+
+function weightedPick(){
+  const weights = KANJI.map(k=>{
+    const rank = state.progress[k]||0;
+    const base = (3-rank)+1;
+    const miss = (state.mistakes[k]||0)*2;
+    const damp = (rank===3)?0.4:1;
+    return (base+miss)*damp;
+  });
+  const sum = weights.reduce((a,b)=>a+b,0);
+  let r = Math.random()*sum;
+  for(let i=0;i<KANJI.length;i++){ r-=weights[i]; if(r<=0) return KANJI[i]; }
+  return KANJI[KANJI.length-1];
+}
+
+function makeReadingChoices(correct, count=3){
+  const pool = new Set([correct]);
+  while(pool.size < count){
+    const k = KANJI[Math.floor(Math.random()*KANJI.length)];
+    const cand = READING[k]?.main;
+    if(cand && cand!==correct) pool.add(cand);
+  }
+  return shuffle([...pool]);
+}
+function makeKanjiChoices(correctKanji, count=3){
+  const pool = new Set([correctKanji]);
+  while(pool.size < count){
+    const k = weightedPick();
+    if(k!==correctKanji) pool.add(k);
+  }
+  return shuffle([...pool]);
+}
+
+function addMistake(k){ state.mistakes[k]=(state.mistakes[k]||0)+1; save(); }
+function reduceMistake(k){ if(!state.mistakes[k]) return; state.mistakes[k]=Math.max(0,state.mistakes[k]-1); if(state.mistakes[k]===0) delete state.mistakes[k]; save(); }
+function tryRankUp(kanji, targetRank){
+  if(state.mode==='mock') return;
+  const prev = state.progress[kanji]||0;
+  const next = Math.max(prev, targetRank);
+  if(next>prev){ state.progress[kanji]=next; save(); }
+}
+
+function showFeedback(ok, sub){
+  fb.style.display='flex';
+  fbBox.style.background = ok ? 'rgba(220,252,231,.95)' : 'rgba(254,226,226,.95)';
+  fbEmoji.textContent = ok ? '✅' : '❌';
+  fbText.textContent = ok ? 'せいかい！' : 'ざんねん…';
+  fbSub.textContent = sub || '';
+  clearTimeout(showFeedback._t);
+  showFeedback._t = setTimeout(()=>{ fb.style.display='none'; }, 420);
+}
+
+function viewHome(){
+  state.mode='home';
+  state.session = {limit:20, done:0, correct:0, total:0};
+  renderHud();
+  const card = el('div',{class:'card'},[
+    el('div',{class:'tag'},'メニュー'),
+    el('div',{class:'title'},'かんけん10きゅう'),
+    el('div',{class:'subtitle'},'読み・書き・書き順で あそぶ！'),
+    el('div',{class:'grid'},[
+      el('button',{class:'btn',type:'button',onClick:()=>startMode('yomi')},'📖 よみ'),
+      el('button',{class:'btn',type:'button',onClick:()=>startMode('kaku')},'✏️ かき（えらぶ）'),
+      el('button',{class:'btn',type:'button',onClick:()=>startMode('kakijun')},'1️⃣ かきじゅん'),
+      el('button',{class:'btn btnAccent',type:'button',onClick:()=>startMode('mock')},'⏱️ 10きゅうチャレンジ'),
+    ]),
+    el('div',{class:'note'},
+      '各モードは20問（チャレンジは10問）。\n' +
+      '書き順は strokes.json を同じフォルダに置けば外部通信なしで動きます。\n' +
+      '（strokes.json が無いと書き順だけ起動できません）'
+    )
+  ]);
+  screen(card);
+}
+
+function viewLoading(tag,msg){
+  const card = el('div',{class:'card'},[
+    el('div',{class:'tag'},tag),
+    el('div',{class:'loading'},[
+      el('div',{class:'spinner'}),
+      el('div',{},msg||'よみこみちゅう…')
+    ]),
+    el('button',{class:'btn btnWide btnAccent',type:'button',onClick:viewHome},'メニューにもどる')
+  ]);
+  screen(card);
+}
+
+function viewError(tag,msg){
+  const card = el('div',{class:'card'},[
+    el('div',{class:'tag'},tag),
+    el('div',{class:'title',style:'margin-top:18px;font-size:30px;color:#ef4444;'},'うまくいかない…'),
+    el('div',{class:'warn'},msg),
+    el('button',{class:'btn btnWide',type:'button',onClick:()=>startMode(state.mode)},'もういちど'),
+    el('button',{class:'btn btnWide btnAccent',type:'button',onClick:viewHome},'メニュー')
+  ]);
+  screen(card);
+}
+
+function viewQuestion(q){
+  const explain = el('div',{class:'explain',id:'explain'}, q.explain||'');
+  const choices = el('div',{class:'choices'}, q.choices.map(c=>
+    el('button',{class:'choice',type:'button',onClick:()=>judge(q,c)}, c)
+  ));
+
+  const parts = [el('div',{class:'tag'}, q.tag)];
+  if(q.type==='yomi'){ parts.push(el('div',{class:'bigKanji'}, q.kanji), el('div',{class:'prompt'},'なんて よむかな？')); }
+  if(q.type==='kaku'){ parts.push(el('div',{class:'bigKana'}, q.reading), el('div',{class:'prompt'},`「${q.reading}」の かんじは？`)); }
+  if(q.type==='kakijun'){
+    parts.push(el('div',{class:'svgBox'}, q.svg), el('div',{class:'prompt'},'あかい ところは なんばんめ？'));
+  }
+  if(q.type==='mock'){
+    parts.push(el('div',{class:'prompt'},'10きゅうチャレンジ（ランクは上がらない）'));
+    if(q.inner==='yomi') parts.push(el('div',{class:'bigKanji'}, q.kanji), el('div',{class:'prompt'},'なんて よむかな？'));
+    else parts.push(el('div',{class:'bigKana'}, q.reading), el('div',{class:'prompt'},`「${q.reading}」の かんじは？`));
+  }
+  parts.push(el('div',{class:'counter'}, q.counter));
+  parts.push(choices);
+  parts.push(explain);
+
+  screen(el('div',{class:'card'}, parts));
+}
+
+function showExplain(){ const e=document.getElementById('explain'); if(e) e.style.display='block'; }
+
+function startMode(mode){
+  state.mode = mode;
+  state.session = { limit: (mode==='mock')?10:20, done:0, correct:0, total:0 };
+  renderHud();
+  next();
+}
+
+// ---- strokes (local file) ----
+let strokesData = null;
+async function ensureStrokesLoaded(){
+  if(strokesData) return strokesData;
+  const controller = new AbortController();
+  const t = setTimeout(()=>controller.abort(), 5000);
+  try{
+    const res = await fetch('./strokes.json', {cache:'no-store', signal: controller.signal});
+    if(!res.ok) throw new Error('strokes.json が見つかりません（HTTP '+res.status+'）');
+    strokesData = await res.json();
+    return strokesData;
+  }catch(e){
+    if(e && e.name==='AbortError') throw new Error('strokes.json の読み込みがタイムアウトしました');
+    throw e;
+  }finally{ clearTimeout(t); }
+}
+function makeStrokeSvg(ds, redIndex){
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS,'svg');
+  svg.setAttribute('viewBox','0 0 109 109');
+  for(const d of ds){
+    const p = document.createElementNS(svgNS,'path');
+    p.setAttribute('d', d);
+    p.setAttribute('class','strokeBase');
+    svg.appendChild(p);
+  }
+  const r = ds[redIndex-1];
+  if(r){
+    const p = document.createElementNS(svgNS,'path');
+    p.setAttribute('d', r);
+    p.setAttribute('class','strokeRed');
+    svg.appendChild(p);
+  }
+  return svg;
+}
+
+async function next(){
+  if(state.session.done >= state.session.limit){
+    viewHome();
+    showFeedback(true, `おわり！ せいかい ${state.session.correct}/${state.session.total}`);
+    return;
+  }
+
+  try{
+    if(state.mode==='yomi'){
+      const kanji = weightedPick();
+      const rd = READING[kanji];
+      viewQuestion({
+        type:'yomi', tag:'よみ', kanji,
+        choices: makeReadingChoices(rd.main,3),
+        answer: rd.main,
+        ok: rd.ok,
+        explain: (rd.ok.length>1)?`ほかの よみ：${rd.ok.join(' / ')}`:'',
+        counter: `もんだい ${state.session.done+1}/${state.session.limit}（ランク：${state.progress[kanji]||0}）`
+      });
+      return;
+    }
+
+    if(state.mode==='kaku'){
+      const kanji = weightedPick();
+      const rd = READING[kanji];
+      viewQuestion({
+        type:'kaku', tag:'かき（えらぶ）', kanji, reading: rd.main,
+        choices: makeKanjiChoices(kanji,3),
+        answer: kanji,
+        explain:'',
+        counter: `もんだい ${state.session.done+1}/${state.session.limit}（ランク：${state.progress[kanji]||0}）`
+      });
+      return;
+    }
+
+    if(state.mode==='kakijun'){
+      const kanji = weightedPick();
+      viewLoading('かきじゅん', `「${kanji}」を よみこみちゅう…`);
+
+      const data = await ensureStrokesLoaded();
+      const ds = data[kanji];
+      if(!Array.isArray(ds) || ds.length===0) throw new Error(`strokes.json に「${kanji}」がありません`);
+
+      const total = ds.length;
+      const redIndex = 1 + Math.floor(Math.random()*total);
+      const choiceNums = new Set([redIndex]);
+      while(choiceNums.size < 3){
+        const delta = [-2,-1,1,2][Math.floor(Math.random()*4)];
+        choiceNums.add(clamp(redIndex+delta,1,total));
+      }
+      const choices = shuffle([...choiceNums].map(n=>`${n}かくめ`));
+
+      viewQuestion({
+        type:'kakijun', tag:'かきじゅん', kanji,
+        svg: makeStrokeSvg(ds, redIndex),
+        choices,
+        answer: `${redIndex}かくめ`,
+        explain: `「${kanji}」は ぜんぶで ${total}かく。`,
+        counter: `もんだい ${state.session.done+1}/${state.session.limit}（ランク：${state.progress[kanji]||0}）`
+      });
+      return;
+    }
+
+    if(state.mode==='mock'){
+      const kanji = weightedPick();
+      const inner = (Math.random()<0.7)?'yomi':'kaku';
+      if(inner==='yomi'){
+        const rd = READING[kanji];
+        viewQuestion({
+          type:'mock', inner:'yomi', tag:'チャレンジ', kanji,
+          choices: makeReadingChoices(rd.main,3),
+          answer: rd.main,
+          ok: rd.ok,
+          explain: (rd.ok.length>1)?`ほかの よみ：${rd.ok.join(' / ')}`:'',
+          counter: `もんだい ${state.session.done+1}/${state.session.limit}`
+        });
+      }else{
+        const rd = READING[kanji];
+        viewQuestion({
+          type:'mock', inner:'kaku', tag:'チャレンジ', kanji, reading: rd.main,
+          choices: makeKanjiChoices(kanji,3),
+          answer: kanji,
+          ok: null,
+          explain:'',
+          counter: `もんだい ${state.session.done+1}/${state.session.limit}`
+        });
+      }
+      return;
+    }
+
+  }catch(err){
+    viewError('エラー',
+      '止まらないように、すぐに原因を出します。\n\n' +
+      '原因：' + (err?.message || String(err)) + '\n\n' +
+      '対策：\n' +
+      '・書き順を使うなら strokes.json を game.html と同じ場所に置く\n' +
+      '・GitHub Pages に反映後、強制更新（iPhoneは下に引っ張って更新）'
+    );
+  }
+}
+
+function judge(q, picked){
+  showExplain();
+
+  // ここが1回しか進まないように、先にボタンを無効化
+  const btns = root.querySelectorAll('button.choice');
+  btns.forEach(b=>b.disabled=true);
+
+  state.session.total += 1;
+  state.session.done += 1;
+  renderHud();
+
+  let ok = false;
+  if(q.type==='yomi' || (q.type==='mock' && q.inner==='yomi')) ok = (q.ok||[]).includes(picked);
+  else ok = (picked === q.answer);
+
+  if(ok){
+    state.session.correct += 1;
+    reduceMistake(q.kanji);
+    if(state.mode==='yomi') tryRankUp(q.kanji,1);
+    if(state.mode==='kaku') tryRankUp(q.kanji,2);
+    if(state.mode==='kakijun') tryRankUp(q.kanji,3);
+    showFeedback(true);
+    setTimeout(next, 260);
+  }else{
+    addMistake(q.kanji);
+    showFeedback(false, 'こたえ：' + q.answer);
+    setTimeout(next, 420);
+  }
+}
+
+// Buttons
+document.getElementById('homeBtn').addEventListener('click', viewHome);
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  if(confirm('学習データをリセットしますか？（ランク・苦手が消えます）')){
+    localStorage.removeItem(STORAGE_KEY);
+    state.progress={}; state.mistakes={};
+    init(); save();
+    viewHome();
+    showFeedback(true,'リセットしました');
+  }
+});
+
+// Boot
+load();
+renderHud();
+viewHome();
+</script>
+</body>
+</html>
