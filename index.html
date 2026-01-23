@@ -1,50 +1,100 @@
 <!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>漢検10級トレーニング</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>漢検10級 トレーニング</title>
   <style>
+    :root{
+      --bg:#eef3ff;
+      --card:#ffffff;
+      --text:#111827;
+      --muted:#6b7280;
+      --blue:#5b7cfa;
+      --orange:#f2a65a;
+      --shadow:0 10px 24px rgba(17,24,39,.08);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
     body{
-      font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
-      background:#f5f7fb;
       margin:0;
-      padding:24px;
+      font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      background:linear-gradient(180deg,#f7f9ff 0%, var(--bg) 100%);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      padding:22px 14px;
+    }
+    .wrap{width:min(520px,100%); margin-top:10px;}
+    h1{
+      margin:18px 0 14px;
       text-align:center;
+      font-size:28px;
+      letter-spacing:.02em;
     }
-    h1{ margin-bottom:24px; }
-    .btn{
-      display:block;
-      margin:12px auto;
-      padding:16px;
-      max-width:320px;
-      background:#4f7cff;
-      color:#fff;
-      text-decoration:none;
-      font-size:20px;
-      border-radius:12px;
-      font-weight:bold;
+    .card{
+      background:var(--card);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:18px;
     }
-    .btn.secondary{ background:#ff9f43; }
-    .note{
-      margin-top:24px;
+    .desc{
+      margin:0 0 12px;
+      text-align:center;
+      color:var(--muted);
       font-size:14px;
-      color:#555;
+      line-height:1.5;
     }
+    .btn{
+      width:100%;
+      border:0;
+      border-radius:14px;
+      padding:16px 14px;
+      margin:10px 0;
+      font-size:20px;
+      font-weight:800;
+      letter-spacing:.02em;
+      cursor:pointer;
+      box-shadow:0 8px 18px rgba(0,0,0,.06);
+      transition:transform .05s ease;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      text-decoration:none;
+      color:white;
+      user-select:none;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .btn:active{transform:scale(.99)}
+    .btn.blue{background:var(--blue)}
+    .btn.orange{background:var(--orange); color:#1f2937}
+    .note{
+      margin:14px 0 0;
+      text-align:center;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.5;
+    }
+    .small{font-size:12px; opacity:.95}
   </style>
 </head>
 <body>
+  <div class="wrap">
+    <h1>漢検10級 トレーニング</h1>
 
-<h1>漢検10級 トレーニング</h1>
+    <div class="card">
+      <p class="desc">3つのモード：よみ／かき／かきじゅん（赤いところが何画目？）</p>
 
-<a class="btn" href="game.html?mode=yomi">📖 よみ</a>
-<a class="btn" href="game.html?mode=kaki">✍️ かき</a>
-<a class="btn secondary" href="game.html?mode=kakijun">🧠 かきじゅん</a>
+      <a class="btn blue" href="./game.html?mode=yomi">📖 よみ</a>
+      <a class="btn blue" href="./game.html?mode=kaki">✍️ かき</a>
+      <a class="btn orange" href="./game.html?mode=kakijun">🧠 かきじゅん</a>
 
-<div class="note">
-  毎日すこしずつやろう。<br>
-  iPhoneでそのまま使えます。
-</div>
-
+      <p class="note">毎日すこしずつやろう。<br/>iPhoneでそのまま使えます。</p>
+      <p class="note small">※ 2ファイルだけ（index.html / game.html）で動きます。</p>
+    </div>
+  </div>
 </body>
 </html>
