@@ -2,316 +2,80 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>漢検10級ゲーム</title>
   <style>
-    :root{
-      --bg:#eef3ff;
-      --card:#ffffff;
-      --text:#111827;
-      --muted:#6b7280;
-      --blue:#5b7cfa;
-      --shadow:0 10px 24px rgba(17,24,39,.08);
-      --radius:18px;
+    :root {
+      --bg1:#f4f7ff;
+      --bg2:#eef3ff;
+      --card:#ffffffcc;
+      --text:#0f172a;
+      --muted:#475569;
+      --blue:#5a7bf0;
+      --blue2:#3f63e6;
+      --ok:#16a34a;
+      --bad:#ef4444;
+      --shadow: 0 16px 40px rgba(15,23,42,.10);
+      --radius: 18px;
     }
     *{box-sizing:border-box}
-    body{
+    body {
       margin:0;
-      font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-      background:linear-gradient(180deg,#f7f9ff 0%, var(--bg) 100%);
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", "Segoe UI", system-ui, sans-serif;
       color:var(--text);
-      min-height:100vh;
-      display:flex;
-      align-items:flex-start;
-      justify-content:center;
-      padding:18px 14px 28px;
-    }
-    .wrap{width:min(720px,100%);}
-    .topbar{
-      display:flex; flex-wrap:wrap; gap:10px;
-      justify-content:center; align-items:center;
-      margin:6px 0 16px;
-    }
-    .pill{
-      background:rgba(255,255,255,.8);
-      border:1px solid rgba(17,24,39,.06);
-      border-radius:999px;
-      padding:10px 14px;
-      box-shadow:0 6px 14px rgba(0,0,0,.05);
-      font-weight:700;
-      font-size:14px;
-    }
-    .btnSmall{
-      border:1px solid rgba(91,124,250,.35);
-      color:var(--blue);
-      background:rgba(255,255,255,.9);
-      border-radius:999px;
-      padding:10px 14px;
-      font-weight:800;
-      cursor:pointer;
-      text-decoration:none;
-      user-select:none;
-      -webkit-tap-highlight-color:transparent;
-    }
-    .btnSmall:active{transform:scale(.99)}
-    .card{
-      background:var(--card);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      padding:18px;
-      width:100%;
-      max-width:520px;
-      margin:0 auto;
-    }
-    .title{
-      display:flex; align-items:center; gap:10px;
-      font-weight:900; font-size:22px;
-      margin:0 0 8px;
-    }
-    .sub{
-      margin:0 0 12px;
-      color:var(--muted);
-      font-size:14px;
-    }
-    .center{ text-align:center; }
-
-    .big{
-      font-weight:900;
-      font-size:92px;
-      line-height:1.05;
-      letter-spacing:.02em;
-      margin:12px 0 4px;
-      text-align:center;
-      min-height:96px;
-    }
-    /* ★保険：textContent が何かの理由で描画されなくても data-value から必ず表示 */
-    .big::before{content:attr(data-value);}
-
-    .choices{ margin-top:10px; display:grid; gap:12px; }
-    .choice{
-      width:100%;
-      border:0;
-      border-radius:14px;
-      padding:16px 12px;
-      background:var(--blue);
-      color:white;
-      font-weight:900;
-      font-size:22px;
-      letter-spacing:.03em;
-      cursor:pointer;
-      box-shadow:0 10px 18px rgba(91,124,250,.25);
-      user-select:none;
-      -webkit-tap-highlight-color:transparent;
-    }
-    .choice:active{transform:scale(.99)}
-    .msg{
-      margin-top:12px;
-      font-weight:900;
-      text-align:center;
-      font-size:18px;
-      min-height:1.4em;
-    }
-    .msg.ok{color:#16a34a}
-    .msg.ng{color:#dc2626}
-
-    .svgWrap{
+      background: radial-gradient(1200px 600px at 50% -200px, #dfe8ff 0%, transparent 60%),
+                  linear-gradient(180deg, var(--bg1), var(--bg2));
+      min-height:100svh;
       display:flex;
       justify-content:center;
-      margin:10px 0 6px;
+      padding: 18px 12px 28px;
     }
-    svg{max-width:220px; width:220px; height:220px;}
-    .hint{
-      margin:8px 0 0;
-      text-align:center;
-      color:var(--muted);
-      font-size:12px;
+    .wrap { width: min(720px, 100%); }
+    .topbar {
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      justify-content:center;
+      align-items:center;
+      margin-bottom: 14px;
     }
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <div class="topbar">
-      <div class="pill" id="modePill">モード：</div>
-      <div class="pill" id="progressPill">1/20</div>
-      <a class="btnSmall" href="./index.html">← ホーム</a>
-      <button class="btnSmall" id="resetBtn" type="button">リセット</button>
-    </div>
-
-    <div class="card">
-      <div class="title" id="titleText">よみ</div>
-      <p class="sub center" id="promptText">この かんじ は なんて よむ？</p>
-
-      <div class="svgWrap" id="svgWrap" style="display:none;"></div>
-
-      <div class="big" id="bigKanji" data-value=""></div>
-
-      <div class="choices" id="choices"></div>
-
-      <div class="msg" id="msg"></div>
-      <div class="hint" id="hint"></div>
-    </div>
-  </div>
-
-  <script>
-    // ======================
-    // ここからデータ（抜粋例）
-    // ※このファイルは「2ファイル構成」を守るため、必要データは中に持たせます
-    // ======================
-
-    // ★ ここはあなたの現行データが入っている前提（削らない）
-    // 以下は構造だけ同じにしてあります（あなたの既存版ではここがもっと長いはず）
-    const ITEMS = [
-      { k:"手", r:"て" }, { k:"音", r:"おと" }, { k:"田", r:"た" },
-      { k:"円", r:"えん" }, { k:"火", r:"ひ" }, { k:"口", r:"くち" },
-      { k:"山", r:"やま" }, { k:"川", r:"かわ" }
-    ];
-    // 「かきじゅん」用（あなたの現行版では STROKES が入っているはず）
-    const STROKES = window.STROKES || {}; // 既存コードが入っていればそれを使う
-
-    // ======================
-    // ロジック
-    // ======================
-    const params = new URL(location.href).searchParams;
-    const mode = (params.get("mode") || "yomi").toLowerCase();
-
-    // mode 名寄せ（index 側が多少ブレても動く）
-    const modeNorm = (mode === "kaku") ? "kaki" : (mode === "jun" ? "kakijun" : mode);
-
-    const titleText = document.getElementById("titleText");
-    const promptText = document.getElementById("promptText");
-    const bigKanji = document.getElementById("bigKanji");
-    const choicesEl = document.getElementById("choices");
-    const msgEl = document.getElementById("msg");
-    const hintEl = document.getElementById("hint");
-    const modePill = document.getElementById("modePill");
-    const progressPill = document.getElementById("progressPill");
-    const svgWrap = document.getElementById("svgWrap");
-    const resetBtn = document.getElementById("resetBtn");
-
-    let order = [];
-    let idx = 0;
-
-    function shuffle(a){
-      for(let i=a.length-1;i>0;i--){
-        const j = Math.floor(Math.random()*(i+1));
-        [a[i],a[j]]=[a[j],a[i]];
-      }
-      return a;
+    .pill {
+      background: rgba(255,255,255,.75);
+      border: 1px solid rgba(148,163,184,.35);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: var(--muted);
+      box-shadow: 0 10px 22px rgba(15,23,42,.08);
+      backdrop-filter: blur(10px);
     }
-
-    function setTextSafe(el, text){
-      const t = (text ?? "").toString();
-      el.textContent = t;
-      el.dataset.value = t; // ★保険
+    .pill b { color: var(--text); }
+    .btnSmall {
+      border: 1px solid rgba(148,163,184,.45);
+      background: rgba(255,255,255,.75);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-weight: 700;
+      color: var(--blue2);
+      cursor:pointer;
+      box-shadow: 0 10px 22px rgba(15,23,42,.08);
+      backdrop-filter: blur(10px);
+      -webkit-tap-highlight-color: transparent;
     }
-
-    function reset(){
-      order = shuffle(ITEMS.slice());
-      idx = 0;
-      msgEl.textContent = "";
-      msgEl.className = "msg";
-      hintEl.textContent = "";
-      show();
+    .btnSmall:active { transform: translateY(1px); }
+    .card {
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid rgba(148,163,184,.35);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px 14px 16px;
+      backdrop-filter: blur(10px);
     }
-
-    function makeChoices(correct, pool, n=3){
-      const cand = new Set([correct]);
-      while(cand.size < n){
-        cand.add(pool[Math.floor(Math.random()*pool.length)]);
-      }
-      return shuffle(Array.from(cand));
+    .modeTitle {
+      font-size: 18px;
+      font-weight: 900;
+      margin: 0 0 6px;
     }
-
-    function show(){
-      const item = order[idx];
-      if(!item){
-        setTextSafe(bigKanji, "おわり！");
-        promptText.textContent = "20もん おつかれ！";
-        promptText.dataset.value = promptText.textContent;
-        choicesEl.innerHTML = "";
-        svgWrap.style.display = "none";
-        return;
-      }
-
-      const n = idx + 1;
-      progressPill.textContent = `${n}/20`;
-
-      // UI クリア
-      msgEl.textContent = "";
-      msgEl.className = "msg";
-      hintEl.textContent = "";
-      svgWrap.style.display = "none";
-      svgWrap.innerHTML = "";
-
-      if (modeNorm === "yomi"){
-        titleText.textContent = "よみ";
-        promptText.textContent = "この かんじ は なんて よむ？";
-        promptText.dataset.value = promptText.textContent;
-
-        setTextSafe(bigKanji, item.k);
-
-        const pool = ITEMS.map(x=>x.r);
-        const choices = makeChoices(item.r, pool, 3);
-        renderChoices(choices, item.r, (ans)=> ans===item.r);
-
-      } else if (modeNorm === "kaki"){
-        titleText.textContent = "かき";
-        promptText.textContent = "この よみ の かんじ は どれ？";
-        promptText.dataset.value = promptText.textContent;
-
-        setTextSafe(bigKanji, item.r);
-
-        const pool = ITEMS.map(x=>x.k);
-        const choices = makeChoices(item.k, pool, 3);
-        renderChoices(choices, item.k, (ans)=> ans===item.k);
-
-      } else {
-        titleText.textContent = "かきじゅん";
-        promptText.textContent = "あかいところは なんがいめ？";
-        promptText.dataset.value = promptText.textContent;
-
-        setTextSafe(bigKanji, item.k);
-
-        // ★ここはあなたの既存「赤くなるところ」の実装に合わせて残してください
-        // ここでは簡易ダミー：1/2/3を出すだけ
-        const choices = ["1","2","3"];
-        renderChoices(choices, "2", (ans)=> ans==="2");
-
-        // svgWrap は既存データがあるなら表示してOK
-        // svgWrap.style.display = "flex";
-        // svgWrap.innerHTML = "...(既存のSVG描画)...";
-      }
-
-      modePill.textContent = `モード：${titleText.textContent}`;
-    }
-
-    function renderChoices(choices, correct, isCorrect){
-      choicesEl.innerHTML = "";
-      choices.forEach(c=>{
-        const b = document.createElement("button");
-        b.className = "choice";
-        b.type = "button";
-        b.textContent = c;
-        b.onclick = ()=>{
-          const ok = isCorrect(c);
-          if(ok){
-            msgEl.textContent = "せいかい！";
-            msgEl.className = "msg ok";
-            idx++;
-            setTimeout(show, 260);
-          }else{
-            msgEl.textContent = "ざんねん…";
-            msgEl.className = "msg ng";
-          }
-        };
-        choicesEl.appendChild(b);
-      });
-    }
-
-    resetBtn.addEventListener("click", reset);
-
-    // start
-    reset();
-  </script>
-</body>
-</html>
+    .prompt {
+      margin: 2px 0 10

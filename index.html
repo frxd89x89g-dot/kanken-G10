@@ -2,99 +2,99 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>漢検10級 トレーニング</title>
   <style>
-    :root{
-      --bg:#eef3ff;
-      --card:#ffffff;
-      --text:#111827;
-      --muted:#6b7280;
-      --blue:#5b7cfa;
-      --orange:#f2a65a;
-      --shadow:0 10px 24px rgba(17,24,39,.08);
-      --radius:18px;
+    :root {
+      --bg1:#f4f7ff;
+      --bg2:#eef3ff;
+      --card:#ffffffcc;
+      --text:#0f172a;
+      --muted:#475569;
+      --blue:#5a7bf0;
+      --blue2:#3f63e6;
+      --orange:#f3aa55;
+      --shadow: 0 16px 40px rgba(15,23,42,.10);
+      --radius: 18px;
     }
     *{box-sizing:border-box}
-    body{
+    body {
       margin:0;
-      font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-      background:linear-gradient(180deg,#f7f9ff 0%, var(--bg) 100%);
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", "Segoe UI", system-ui, sans-serif;
       color:var(--text);
-      min-height:100vh;
-      display:flex;
-      align-items:flex-start;
-      justify-content:center;
-      padding:22px 14px;
-    }
-    .wrap{width:min(520px,100%); margin-top:10px;}
-    h1{
-      margin:18px 0 14px;
-      text-align:center;
-      font-size:28px;
-      letter-spacing:.02em;
-    }
-    .card{
-      background:var(--card);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      padding:18px;
-    }
-    .desc{
-      margin:0 0 12px;
-      text-align:center;
-      color:var(--muted);
-      font-size:14px;
-      line-height:1.5;
-    }
-    .btn{
-      width:100%;
-      border:0;
-      border-radius:14px;
-      padding:16px 14px;
-      margin:10px 0;
-      font-size:20px;
-      font-weight:800;
-      letter-spacing:.02em;
-      cursor:pointer;
-      box-shadow:0 8px 18px rgba(0,0,0,.06);
-      transition:transform .05s ease;
+      background: radial-gradient(1200px 600px at 50% -200px, #dfe8ff 0%, transparent 60%),
+                  linear-gradient(180deg, var(--bg1), var(--bg2));
+      min-height:100svh;
       display:flex;
       align-items:center;
       justify-content:center;
-      gap:10px;
-      text-decoration:none;
-      color:white;
-      user-select:none;
-      -webkit-tap-highlight-color:transparent;
+      padding: 24px 14px;
     }
-    .btn:active{transform:scale(.99)}
-    .btn.blue{background:var(--blue)}
-    .btn.orange{background:var(--orange); color:#1f2937}
-    .note{
-      margin:14px 0 0;
+    .wrap {
+      width: min(560px, 100%);
       text-align:center;
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.5;
     }
-    .small{font-size:12px; opacity:.95}
+    h1 {
+      margin: 0 0 14px;
+      font-size: clamp(22px, 4.5vw, 34px);
+      letter-spacing: .02em;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(148,163,184,.35);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px 16px 16px;
+      backdrop-filter: blur(10px);
+    }
+    .sub {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .btn {
+      width:100%;
+      border:0;
+      border-radius: 14px;
+      padding: 16px 14px;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      color: #fff;
+      cursor:pointer;
+      box-shadow: 0 10px 22px rgba(15,23,42,.12);
+      transition: transform .08s ease, filter .08s ease;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap: 10px;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn:active { transform: translateY(1px); filter: brightness(.98); }
+    .btn.blue { background: linear-gradient(180deg, var(--blue), var(--blue2)); }
+    .btn.orange { background: linear-gradient(180deg, var(--orange), #ef9a3a); }
+    .stack { display:grid; gap: 12px; }
+    .footer {
+      margin-top: 12px;
+      color: rgba(71,85,105,.8);
+      font-size: 12px;
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
+  <main class="wrap">
     <h1>漢検10級 トレーニング</h1>
-
-    <div class="card">
-      <p class="desc">3つのモード：よみ／かき／かきじゅん（赤いところが何画目？）</p>
-
-      <a class="btn blue" href="./game.html?mode=yomi">📖 よみ</a>
-      <a class="btn blue" href="./game.html?mode=kaki">✍️ かき</a>
-      <a class="btn orange" href="./game.html?mode=kakijun">🧠 かきじゅん</a>
-
-      <p class="note">毎日すこしずつやろう。<br/>iPhoneでそのまま使えます。</p>
-      <p class="note small">※ 2ファイルだけ（index.html / game.html）で動きます。</p>
-    </div>
-  </div>
+    <section class="card">
+      <p class="sub">3つのモード：よみ／かき／かきじゅん</p>
+      <div class="stack">
+        <button class="btn blue" onclick="location.href='game.html?mode=yomi'">📖 よみ</button>
+        <button class="btn blue" onclick="location.href='game.html?mode=kaki'">✍️ かき</button>
+        <button class="btn orange" onclick="location.href='game.html?mode=kakijun'">🧠 かきじゅん</button>
+      </div>
+      <div class="footer">毎日すこしずつやろう。iPhoneでそのまま使えます。</div>
+    </section>
+  </main>
 </body>
 </html>
