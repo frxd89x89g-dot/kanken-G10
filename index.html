@@ -1,32 +1,50 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-<title>漢検10級 勉強ゲーム</title>
-<style>
-  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;background:#f7fbff;color:#233;}
-  main{max-width:720px;margin:0 auto;padding:20px 14px 40px;}
-  .card{background:#fff;border-radius:18px;padding:18px 16px;border:1px solid rgba(0,0,0,.06);box-shadow:0 10px 28px rgba(14,30,37,.10);}
-  h1{margin:0 0 10px;font-size:22px;}
-  .tiny{color:#667;font-size:13px;line-height:1.5;}
-  .btn{display:block;width:100%;margin-top:10px;border:0;border-radius:14px;padding:16px 14px;font-size:18px;font-weight:900;background:#e9f1ff;color:#233;text-align:center;text-decoration:none;}
-  .btn.secondary{background:#fff2c6;}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>漢検10級トレーニング</title>
+  <style>
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+      background:#f5f7fb;
+      margin:0;
+      padding:24px;
+      text-align:center;
+    }
+    h1{ margin-bottom:24px; }
+    .btn{
+      display:block;
+      margin:12px auto;
+      padding:16px;
+      max-width:320px;
+      background:#4f7cff;
+      color:#fff;
+      text-decoration:none;
+      font-size:20px;
+      border-radius:12px;
+      font-weight:bold;
+    }
+    .btn.secondary{ background:#ff9f43; }
+    .note{
+      margin-top:24px;
+      font-size:14px;
+      color:#555;
+    }
+  </style>
 </head>
 <body>
-<main>
-  <div class="card">
-    <h1>漢検10級 勉強ゲーム</h1>
-    <div class="tiny">3つのモード：よみ／かき／かきじゅん（赤いところが何画目？）</div>
-    <a class="btn" href="game.html?mode=yomi">📖 よみ</a>
-    <a class="btn" href="game.html?mode=kaki">✍️ かき</a>
-    <a class="btn secondary" href="game.html?mode=kakinjun">🧠 かきじゅん</a>
-    <div class="tiny" style="margin-top:12px;">
-      ※「かきじゅん」は strokes.json が同じ場所に必要です。<br/>
-      ローカルで開くと fetch が失敗するので、GitHub Pagesで動作確認してください。
-    </div>
-  </div>
-</main>
+
+<h1>漢検10級 トレーニング</h1>
+
+<a class="btn" href="game.html?mode=yomi">📖 よみ</a>
+<a class="btn" href="game.html?mode=kaki">✍️ かき</a>
+<a class="btn secondary" href="game.html?mode=kakijun">🧠 かきじゅん</a>
+
+<div class="note">
+  毎日すこしずつやろう。<br>
+  iPhoneでそのまま使えます。
+</div>
+
 </body>
 </html>

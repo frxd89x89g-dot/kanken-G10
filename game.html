@@ -1,493 +1,362 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>漢検10級 勉強ゲーム</title>
-<style>
-  :root {
-    --bg: #eef6ff;
-    --card: #ffffff;
-    --ink: #233;
-    --muted: #667;
-    --accent: #2b6cb0;
-    --ok: #1f8a3b;
-    --ng: #d64545;
-    --btn: #e9f1ff;
-    --btn2: #fff2c6;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
-    background: linear-gradient(180deg, #f7fbff 0%, var(--bg) 40%, var(--bg) 100%);
-    color: var(--ink);
-  }
-  header {
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    padding: 10px 10px calc(10px + env(safe-area-inset-top));
-    background: rgba(247,251,255,0.95);
-    backdrop-filter: blur(6px);
-    border-bottom: 1px solid rgba(0,0,0,0.04);
-  }
-  .toprow { display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; }
-  .pills { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-  .pill {
-    background:#fff;
-    border:1px solid rgba(0,0,0,0.08);
-    border-radius:999px;
-    padding:7px 10px;
-    font-size:14px;
-    font-weight:800;
-  }
-  .actions { display:flex; gap:8px; }
-  .action {
-    border:0;
-    border-radius:999px;
-    padding:10px 14px;
-    font-weight:900;
-    font-size:14px;
-    background:#fff;
-    border:1px solid rgba(0,0,0,0.08);
-  }
-  main { padding:18px 14px 40px; max-width:720px; margin:0 auto; }
-  .card {
-    background:var(--card);
-    border-radius:18px;
-    padding:18px 16px;
-    box-shadow:0 10px 28px rgba(14,30,37,0.10);
-    border:1px solid rgba(0,0,0,0.05);
-  }
-  .title { font-weight:1000; font-size:18px; margin:0 0 10px; }
-  .kanjiBig { font-size:112px; font-weight:900; text-align:center; margin:4px 0 6px; line-height:1.0; }
-  .prompt { text-align:center; font-weight:900; font-size:18px; color:var(--muted); margin:8px 0 10px; }
-  .choices { display:grid; gap:10px; margin-top:12px; }
-  .btn {
-    width:100%;
-    border:0;
-    border-radius:14px;
-    padding:16px 14px;
-    font-size:20px;
-    font-weight:1000;
-    background:var(--btn);
-    color:var(--ink);
-    box-shadow:0 4px 0 rgba(0,0,0,0.08);
-    touch-action: manipulation;
-  }
-  .btn:active { transform: translateY(1px); box-shadow:0 3px 0 rgba(0,0,0,0.08); }
-  .btn.secondary { background:var(--btn2); }
-  .tiny { font-size:13px; color:var(--muted); text-align:center; margin-top:10px; line-height:1.4; }
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>漢検10級ゲーム</title>
+  <style>
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+      background:#ffffff;
+      margin:0;
+      padding:20px;
+      text-align:center;
+    }
+    h2{ margin:8px 0 14px; }
+    .sub{ color:#555; font-size:14px; margin-bottom:10px; }
+    .kanji{
+      font-size:96px;
+      margin:18px 0 10px;
+      line-height:1;
+      font-weight:800;
+    }
+    .prompt{
+      font-size:20px;
+      font-weight:700;
+      margin:10px 0 12px;
+      color:#222;
+    }
+    .choices button{
+      display:block;
+      width:100%;
+      max-width:360px;
+      margin:10px auto;
+      padding:16px 14px;
+      font-size:22px;
+      border-radius:14px;
+      border:none;
+      background:#4f7cff;
+      color:#fff;
+      font-weight:800;
+      touch-action: manipulation;
+    }
+    .choices button:active{ transform: translateY(1px); }
 
-  .strokeBox { display:flex; justify-content:center; align-items:center; margin:6px 0 6px; }
-  svg.kanjiSvg { width:240px; height:240px; background:#fff; border-radius:16px; border:1px solid rgba(0,0,0,0.08); }
-  .sGray { stroke:#c7d3df; stroke-width:6; fill:none; stroke-linecap:round; stroke-linejoin:round; }
-  .sHi   { stroke:#e03a3a; stroke-width:10; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+    /* 正誤表示（大きく） */
+    .result{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background:rgba(255,255,255,0.92);
+      z-index:9999;
+      padding:20px;
+    }
+    .resultBox{
+      width:min(520px, 92vw);
+      border-radius:18px;
+      padding:22px 18px;
+      box-shadow:0 18px 40px rgba(0,0,0,.12);
+      border:2px solid rgba(0,0,0,.06);
+      background:#fff;
+    }
+    .ok{ color:#16a34a; font-size:56px; font-weight:900; margin:0 0 10px; }
+    .ng{ color:#ef4444; font-size:56px; font-weight:900; margin:0 0 10px; }
+    .ans{ font-size:22px; font-weight:800; }
+    .small{ margin-top:10px; color:#555; font-size:14px; }
 
-  .overlay {
-    position:fixed;
-    inset:0;
-    display:none;
-    align-items:center;
-    justify-content:center;
-    padding:18px;
-    background:rgba(15,25,35,0.45);
-    z-index:100;
-  }
-  .overlay.show { display:flex; }
-  .toast {
-    width:min(520px, 100%);
-    background:#fff;
-    border-radius:18px;
-    padding:18px 16px;
-    text-align:center;
-    box-shadow:0 20px 50px rgba(0,0,0,0.25);
-  }
-  .bigMark { font-size:52px; font-weight:1100; margin:4px 0 8px; }
-  .bigMark.ok { color:var(--ok); }
-  .bigMark.ng { color:var(--ng); }
-  .sub { font-size:16px; color:var(--muted); margin-bottom:12px; font-weight:900; }
-  .row { display:flex; gap:10px; margin-top:8px; }
-  .row .btn { font-size:18px; padding:14px 12px; }
-</style>
+    /* かきじゅんの表示 */
+    .dots{
+      margin:12px 0 2px;
+      font-size:26px;
+      letter-spacing:4px;
+    }
+    .dot{ color:#111; opacity:.22; }
+    .dot.red{ color:#ff3b30; opacity:1; font-weight:900; }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      max-width:640px;
+      margin:0 auto;
+    }
+    .home{
+      text-decoration:none;
+      color:#4f7cff;
+      font-weight:800;
+      border:1px solid rgba(79,124,255,.25);
+      padding:8px 12px;
+      border-radius:999px;
+    }
+    .counter{
+      font-weight:800;
+      color:#333;
+    }
+  </style>
 </head>
 <body>
-<header>
-  <div class="toprow">
-    <div class="pills">
-      <div class="pill" id="pillLevel">Lv.1</div>
-      <div class="pill" id="pillRank">完成(ランク3) 0/80</div>
-      <div class="pill" id="pillSet">このセット 0/20</div>
-    </div>
-    <div class="actions">
-      <button class="action" id="btnHome">ホーム</button>
-      <button class="action" id="btnReset">リセット</button>
-    </div>
-  </div>
-</header>
 
-<main>
-  <div class="card" id="card"></div>
-</main>
+<div class="topbar">
+  <a class="home" href="index.html">← ホーム</a>
+  <div class="counter" id="counter">1 / 20</div>
+</div>
 
-<div class="overlay" id="overlay">
-  <div class="toast">
-    <div class="bigMark" id="mark">○</div>
-    <div class="sub" id="overlayText">せいかい！</div>
-    <div class="row">
-      <button class="btn secondary" id="btnNext">つぎへ</button>
-      <button class="btn" id="btnToHome2">ホーム</button>
-    </div>
+<h2 id="title"></h2>
+<div class="sub" id="sub"></div>
+<div id="content"></div>
+
+<!-- 正誤オーバーレイ -->
+<div class="result" id="result">
+  <div class="resultBox">
+    <div id="resultText" class="ok">せいかい！</div>
+    <div class="ans" id="answerText"></div>
+    <div class="small">つぎのもんだいへ</div>
   </div>
 </div>
 
 <script>
-(() => {
-  "use strict";
+/* ====== 完全オフライン：止まらない最終版 ====== */
 
-  // -----------------------
-  // Data (JJ can edit here)
-  // -----------------------
-  const YOMI_QUESTIONS = [{"k": "一", "a": ["いち"], "c": ["いち", "ひと", "いっ"]}, {"k": "二", "a": ["に"], "c": ["に", "ふた", "じ"]}, {"k": "三", "a": ["さん"], "c": ["さん", "み", "さ"]}, {"k": "四", "a": ["よん", "し"], "c": ["よん", "し", "よ"]}, {"k": "五", "a": ["ご"], "c": ["ご", "いつ", "い"]}, {"k": "六", "a": ["ろく"], "c": ["ろく", "む", "ろ"]}, {"k": "七", "a": ["なな", "しち"], "c": ["なな", "しち", "な"]}, {"k": "八", "a": ["はち"], "c": ["はち", "や", "は"]}, {"k": "九", "a": ["きゅう", "く"], "c": ["きゅう", "く", "こ"]}, {"k": "十", "a": ["じゅう"], "c": ["じゅう", "とお", "じ"]}, {"k": "入", "a": ["いる", "はいる", "いれる"], "c": ["はいる", "いる", "いれる"]}, {"k": "出", "a": ["でる", "だす"], "c": ["でる", "だす", "しゅつ"]}, {"k": "人", "a": ["ひと"], "c": ["ひと", "にん", "じん"]}, {"k": "大", "a": ["おおきい"], "c": ["おおきい", "だい", "たい"]}, {"k": "小", "a": ["ちいさい"], "c": ["ちいさい", "しょう", "こ"]}, {"k": "上", "a": ["うえ", "あげる", "のぼる"], "c": ["うえ", "あげる", "じょう"]}, {"k": "下", "a": ["した", "さげる", "くだる"], "c": ["した", "さげる", "か"]}, {"k": "日", "a": ["ひ"], "c": ["ひ", "にち", "じつ"]}, {"k": "月", "a": ["つき"], "c": ["つき", "げつ", "がつ"]}, {"k": "火", "a": ["ひ"], "c": ["ひ", "か", "ほ"]}, {"k": "水", "a": ["みず"], "c": ["みず", "すい", "み"]}, {"k": "木", "a": ["き"], "c": ["き", "もく", "こ"]}, {"k": "金", "a": ["かね"], "c": ["かね", "きん", "こん"]}, {"k": "土", "a": ["つち"], "c": ["つち", "ど", "と"]}, {"k": "正", "a": ["ただしい", "ただ"], "c": ["ただしい", "ただ", "せい"]}];
-  const KAKI_QUESTIONS = [{"y": "いち", "k": "一"}, {"y": "に", "k": "二"}, {"y": "さん", "k": "三"}, {"y": "よん", "k": "四"}, {"y": "ご", "k": "五"}, {"y": "ろく", "k": "六"}, {"y": "なな", "k": "七"}, {"y": "はち", "k": "八"}, {"y": "きゅう", "k": "九"}, {"y": "じゅう", "k": "十"}, {"y": "ひと", "k": "人"}, {"y": "おおきい", "k": "大"}, {"y": "ちいさい", "k": "小"}, {"y": "ひ", "k": "日"}, {"y": "つき", "k": "月"}, {"y": "みず", "k": "水"}, {"y": "き", "k": "木"}, {"y": "かね", "k": "金"}, {"y": "つち", "k": "土"}, {"y": "ただしい", "k": "正"}];
+/* 20問で終わる（試験まで回しやすい） */
+const LIMIT = 20;
 
-  // Stroke data is loaded from strokes.json (GitHub Pages OK).
-  // ※ file:// で開くと fetch が失敗します（ローカル確認は簡易サーバかGitHub Pagesで）。
-  const STROKES_URL = "strokes.json";
+/* データ：よみ（生活で言いやすい短い形も許容） */
+const DATA = [
+  { k:"一", y:["いち","ひと"], s:1 },
+  { k:"右", y:["みぎ"], s:5 },
+  { k:"雨", y:["あめ"], s:8 },
+  { k:"円", y:["えん"], s:4 },
+  { k:"王", y:["おう"], s:4 },
+  { k:"音", y:["おと"], s:9 },
+  { k:"下", y:["した"], s:3 },
+  { k:"火", y:["ひ"], s:4 },
+  { k:"花", y:["はな"], s:7 },
+  { k:"貝", y:["かい"], s:7 },
+  { k:"学", y:["がく","まな"], s:8 },
+  { k:"気", y:["き"], s:6 },
+  { k:"九", y:["きゅう"], s:2 },
+  { k:"休", y:["やす","やすむ"], s:6 },
+  { k:"玉", y:["たま"], s:5 },
+  { k:"金", y:["きん","かね"], s:8 },
+  { k:"空", y:["そら"], s:8 },
+  { k:"月", y:["つき"], s:4 },
+  { k:"犬", y:["いぬ"], s:4 },
+  { k:"見", y:["み","みる"], s:7 },
+  { k:"五", y:["ご"], s:4 },
+  { k:"口", y:["くち"], s:3 },
+  { k:"校", y:["こう"], s:10 },
+  { k:"左", y:["ひだり"], s:5 },
+  { k:"三", y:["さん"], s:3 },
+  { k:"山", y:["やま"], s:3 },
+  { k:"子", y:["こ"], s:3 },
+  { k:"四", y:["よん","し"], s:5 },
+  { k:"糸", y:["いと"], s:6 },
+  { k:"字", y:["じ"], s:6 },
+  { k:"耳", y:["みみ"], s:6 },
+  { k:"七", y:["なな","しち"], s:2 },
+  { k:"車", y:["くるま"], s:7 },
+  { k:"手", y:["て"], s:4 },
+  { k:"十", y:["じゅう","とお"], s:2 },
+  { k:"出", y:["で","でる","だす"], s:5 },
+  { k:"女", y:["おんな"], s:3 },
+  { k:"小", y:["ちい","ちいさい"], s:3 },
+  { k:"上", y:["うえ"], s:3 },
+  { k:"森", y:["もり"], s:12 },
+  { k:"人", y:["ひと"], s:2 },
+  { k:"水", y:["みず"], s:4 },
+  /* ここが質問のポイント：
+     正：生活では「ただ」で言いがち → どっちでも正解にする */
+  { k:"正", y:["ただ","ただしい"], s:5 },
+  { k:"生", y:["い","いきる","なま"], s:5 },
+  { k:"青", y:["あお"], s:8 },
+  { k:"夕", y:["ゆう"], s:3 },
+  { k:"石", y:["いし"], s:5 },
+  { k:"赤", y:["あか"], s:7 },
+  { k:"千", y:["せん"], s:3 },
+  { k:"川", y:["かわ"], s:3 },
+  { k:"先", y:["さき"], s:6 },
+  { k:"早", y:["はや","はやい"], s:6 },
+  { k:"草", y:["くさ"], s:9 },
+  { k:"足", y:["あし"], s:7 },
+  { k:"村", y:["むら"], s:7 },
+  { k:"大", y:["おお","おおきい"], s:3 },
+  { k:"男", y:["おとこ"], s:7 },
+  { k:"竹", y:["たけ"], s:6 },
+  { k:"中", y:["なか"], s:4 },
+  { k:"虫", y:["むし"], s:6 },
+  { k:"町", y:["まち"], s:7 },
+  { k:"天", y:["てん"], s:4 },
+  { k:"田", y:["た"], s:5 },
+  { k:"土", y:["つち"], s:3 },
+  { k:"二", y:["に"], s:2 },
+  { k:"日", y:["ひ"], s:4 },
+  /* 入：生活では「はい」で言いがち → どっちでも正解にする */
+  { k:"入", y:["はい","はいる"], s:2 },
+  { k:"年", y:["とし","ねん"], s:6 },
+  { k:"白", y:["しろ"], s:5 },
+  { k:"八", y:["はち"], s:2 },
+  { k:"百", y:["ひゃく"], s:6 },
+  { k:"文", y:["ぶん"], s:4 },
+  { k:"木", y:["き"], s:4 },
+  { k:"本", y:["ほん"], s:5 },
+  { k:"名", y:["な","なまえ"], s:6 },
+  { k:"目", y:["め"], s:5 },
+  { k:"立", y:["た","たつ"], s:5 },
+  { k:"力", y:["ちから"], s:2 },
+  { k:"林", y:["はやし"], s:8 },
+  { k:"六", y:["ろく"], s:4 }
+];
 
-  // -----------------------
-  // State
-  // -----------------------
-  const QS = new URLSearchParams(location.search);
-  const initialMode = (QS.get("mode") || "home").toLowerCase(); // home / yomi / kaki / kakinjun
+const params = new URLSearchParams(location.search);
+const mode = params.get("mode") || "yomi";
 
-  const SET_SIZE = 20;
+const titleEl = document.getElementById("title");
+const subEl = document.getElementById("sub");
+const contentEl = document.getElementById("content");
+const counterEl = document.getElementById("counter");
 
-  const state = {
-    mode: initialMode,
-    setIndex: 0,
-    inSetCorrect: 0,
-    totalCorrect: 0,
-    answered: new Set(),
-    current: null,
-    strokes: null,
-    blocking: false,
-  };
+const resultEl = document.getElementById("result");
+const resultTextEl = document.getElementById("resultText");
+const answerTextEl = document.getElementById("answerText");
 
-  const el = {
-    card: document.getElementById("card"),
-    overlay: document.getElementById("overlay"),
-    mark: document.getElementById("mark"),
-    overlayText: document.getElementById("overlayText"),
-    btnNext: document.getElementById("btnNext"),
-    btnHome: document.getElementById("btnHome"),
-    btnReset: document.getElementById("btnReset"),
-    btnToHome2: document.getElementById("btnToHome2"),
-    pillRank: document.getElementById("pillRank"),
-    pillSet: document.getElementById("pillSet"),
-    pillLevel: document.getElementById("pillLevel"),
-  };
+let idx = 0;
+let current = null;
 
-  function shuffle(a) {
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
+function shuffle(a){
+  const b=[...a];
+  for(let i=b.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [b[i],b[j]]=[b[j],b[i]];
   }
+  return b;
+}
+function randFrom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
-  function pickN(arr, n) {
-    const copy = arr.slice();
-    shuffle(copy);
-    return copy.slice(0, n);
-  }
+function setHeader(){
+  const map = { yomi:"よみ", kaki:"かき", kakijun:"かきじゅん" };
+  titleEl.textContent = map[mode] || "ゲーム";
+  subEl.textContent =
+    (mode==="yomi") ? "この かんじは なんて よむ？" :
+    (mode==="kaki") ? "この よみの かんじは どれ？" :
+    "あかいところは なんばんめ？";
+}
 
-  function setPills() {
-    el.pillSet.textContent = `このセット ${state.setIndex}/${SET_SIZE}`;
-    el.pillRank.textContent = `完成(ランク3) ${state.answered.size}/80`;
-    el.pillLevel.textContent = `モード: ${({home:"ホーム", yomi:"よみ", kaki:"かき", kakinjun:"かきじゅん"}[state.mode] || state.mode)}`;
-  }
-
-  function showOverlay(ok, text) {
-    el.mark.textContent = ok ? "○" : "×";
-    el.mark.className = "bigMark " + (ok ? "ok" : "ng");
-    el.overlayText.textContent = text;
-    el.overlay.classList.add("show");
-  }
-  function hideOverlay() {
-    el.overlay.classList.remove("show");
-  }
-
-  function toHome() { location.href = "index.html"; }
-
-  function resetAll() {
-    localStorage.removeItem("k10_progress_v1");
-    localStorage.removeItem("k10_strokes_cache_v1");
-    location.href = "index.html";
-  }
-
-  function saveProgress() {
-    const data = { answered: Array.from(state.answered), totalCorrect: state.totalCorrect };
-    localStorage.setItem("k10_progress_v1", JSON.stringify(data));
-  }
-  function loadProgress() {
-    try {
-      const data = JSON.parse(localStorage.getItem("k10_progress_v1") || "null");
-      if (!data) return;
-      state.answered = new Set(data.answered || []);
-      state.totalCorrect = data.totalCorrect || 0;
-    } catch {}
-  }
-
-  // -----------------------
-  // Stroke loader with cache + retry
-  // -----------------------
-  async function loadStrokes() {
-    if (state.strokes) return state.strokes;
-
-    try {
-      const cached = localStorage.getItem("k10_strokes_cache_v1");
-      if (cached) {
-        const obj = JSON.parse(cached);
-        if (obj && obj.strokes) {
-          state.strokes = obj.strokes;
-          return state.strokes;
-        }
-      }
-    } catch {}
-
-    const tryFetch = async () => {
-      const controller = new AbortController();
-      const t = setTimeout(() => controller.abort(), 12000);
-      try {
-        const res = await fetch(STROKES_URL, { cache: "no-store", signal: controller.signal });
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        const obj = await res.json();
-        if (!obj || !obj.strokes) throw new Error("bad json");
-        state.strokes = obj.strokes;
-        try { localStorage.setItem("k10_strokes_cache_v1", JSON.stringify({strokes: state.strokes})); } catch {}
-        return state.strokes;
-      } finally {
-        clearTimeout(t);
-      }
-    };
-
-    let lastErr = null;
-    for (let i=0; i<3; i++) {
-      try { return await tryFetch(); }
-      catch (e) { lastErr = e; await new Promise(r => setTimeout(r, 400 + i*600)); }
-    }
-    throw lastErr || new Error("Failed to load strokes");
-  }
-
-  // -----------------------
-  // Flow
-  // -----------------------
-  function answerCommon(ok, detailText) {
-    state.blocking = true;
-    if (ok) { state.inSetCorrect += 1; state.totalCorrect += 1; }
-    setPills();
-    saveProgress();
-    showOverlay(ok, detailText);
-  }
-
-  function renderHome() {
-    state.mode = "home";
-    setPills();
-    el.card.innerHTML = `
-      <div class="title">漢検10級 勉強ゲーム</div>
-      <div class="tiny">iPhoneで遊べる・サクッと20問。<br/>「よみ」「かき」「かきじゅん」の3つで練習します。</div>
-      <div class="choices" style="margin-top:14px;">
-        <button class="btn" data-go="yomi">📖 よみ</button>
-        <button class="btn" data-go="kaki">✍️ かき</button>
-        <button class="btn secondary" data-go="kakinjun">🧠 かきじゅん（色のところ）</button>
-      </div>
-      <div class="tiny" style="margin-top:12px;">
-        ※「かきじゅん」は <b>strokes.json</b> が同じフォルダにある必要があります。<br/>
-        ローカル（file://）で開くと動かないので、GitHub Pagesで確認してください。
-      </div>
-    `;
-    el.card.querySelectorAll("button[data-go]").forEach(b => {
-      b.addEventListener("click", () => {
-        const m = b.getAttribute("data-go");
-        location.href = `game.html?mode=${m}`;
-      });
-    });
-  }
-
-  function renderSetFinished() {
-    setPills();
-    el.card.innerHTML = `
-      <div class="title">このセットおわり！</div>
-      <div class="prompt">せいかい：${state.inSetCorrect} / ${SET_SIZE}</div>
-      <div class="choices">
-        <button class="btn secondary" id="again">もういちど（同じモード）</button>
-        <button class="btn" id="home">ホームにもどる</button>
-      </div>
-      <div class="tiny">※ 20問ずつ。少しずつでOK。</div>
-    `;
-    document.getElementById("again").addEventListener("click", () => startMode(state.mode));
-    document.getElementById("home").addEventListener("click", toHome);
-  }
-
-  function nextQuestion() {
-    if (state.blocking) return;
-    state.setIndex += 1;
-    if (state.setIndex > SET_SIZE) { renderSetFinished(); return; }
-
-    if (state.mode === "yomi") renderYomi();
-    else if (state.mode === "kaki") renderKaki();
-    else if (state.mode === "kakinjun") renderKakinjun();
-    else renderHome();
-  }
-
-  // ---- YOMI ----
-  function renderYomi() {
-    const q = YOMI_QUESTIONS[Math.floor(Math.random() * YOMI_QUESTIONS.length)];
-    state.current = q;
-    setPills();
-    const choices = shuffle(q.c.slice());
-    el.card.innerHTML = `
-      <div class="title">📖 よみ</div>
-      <div class="kanjiBig">${q.k}</div>
-      <div class="prompt">よみは？（ひらがな）</div>
-      <div class="choices">
-        ${choices.map(c => `<button class="btn" data-ans="${c}">${c}</button>`).join("")}
-      </div>
-      <div class="tiny">※「正」は <b>ただ / ただしい</b> どちらもOKにしています。</div>
-    `;
-    el.card.querySelectorAll("button[data-ans]").forEach(btn => {
-      btn.addEventListener("click", () => {
-        if (state.blocking) return;
-        const ans = btn.getAttribute("data-ans");
-        const ok = q.a.includes(ans);
-        answerCommon(ok, ok ? "せいかい！" : `ざんねん…（こたえ：${q.a[0]}）`);
-        state.answered.add("y:" + q.k);
-      });
-    });
-  }
-
-  // ---- KAKI ----
-  function renderKaki() {
-    const q = KAKI_QUESTIONS[Math.floor(Math.random() * KAKI_QUESTIONS.length)];
-    state.current = q;
-    setPills();
-    const pool = KAKI_QUESTIONS.map(x => x.k).filter(k => k !== q.k);
-    const opts = shuffle([q.k, ...pickN(pool, 2)]);
-    el.card.innerHTML = `
-      <div class="title">✍️ かき</div>
-      <div class="prompt">よみ：<span style="font-size:28px; font-weight:1100; color: var(--accent);">${q.y}</span></div>
-      <div class="prompt" style="margin-top:0;">どの かんじ？</div>
-      <div class="choices">
-        ${opts.map(k => `<button class="btn" data-ans="${k}">${k}</button>`).join("")}
-      </div>
-      <div class="tiny">※ いまは「えらぶ」方式（iPhone向け）。</div>
-    `;
-    el.card.querySelectorAll("button[data-ans]").forEach(btn => {
-      btn.addEventListener("click", () => {
-        if (state.blocking) return;
-        const ans = btn.getAttribute("data-ans");
-        const ok = ans === q.k;
-        answerCommon(ok, ok ? "せいかい！" : `ざんねん…（こたえ：${q.k}）`);
-        state.answered.add("k:" + q.k);
-      });
-    });
-  }
-
-  // ---- KAKINJUN ----
-  async function renderKakinjun() {
-    setPills();
-    el.card.innerHTML = `
-      <div class="title">🧠 かきじゅん</div>
-      <div class="prompt">データよみこみ中…</div>
-      <div class="tiny">※ GitHub Pages で動きます（file:// だと失敗します）</div>
-    `;
-
-    let strokes;
-    try { strokes = await loadStrokes(); }
-    catch (e) {
-      el.card.innerHTML = `
-        <div class="title">エラー</div>
-        <div class="prompt">かきじゅんのデータが読み込めませんでした。</div>
-        <div class="tiny">原因：${String(e && e.message ? e.message : e)}</div>
-        <div class="choices" style="margin-top:14px;">
-          <button class="btn secondary" id="retry">もういちど</button>
-          <button class="btn" id="home">ホーム</button>
-        </div>
-      `;
-      document.getElementById("retry").addEventListener("click", () => startMode("kakinjun"));
-      document.getElementById("home").addEventListener("click", toHome);
-      return;
-    }
-
-    const keys = Object.keys(strokes);
-    const k = keys[Math.floor(Math.random() * keys.length)];
-    const ds = strokes[k];
-    if (!ds || ds.length < 2) return renderKakinjun();
-
-    const hi = Math.floor(Math.random() * ds.length);
-    const correct = hi + 1;
-
-    const optSet = new Set([correct]);
-    while (optSet.size < 3) optSet.add(1 + Math.floor(Math.random() * ds.length));
-    const options = shuffle(Array.from(optSet));
-
-    const view = "0 0 109 109";
-    const paths = ds.map((d, idx) => {
-      const cls = idx === hi ? "sHi" : "sGray";
-      return `<path class="${cls}" d="${d}"></path>`;
-    }).join("");
-
-    state.current = { k, correct };
-
-    el.card.innerHTML = `
-      <div class="title">🧠 かきじゅん</div>
-      <div class="strokeBox">
-        <svg class="kanjiSvg" viewBox="${view}" aria-label="kanji strokes">${paths}</svg>
-      </div>
-      <div class="prompt">赤いところは なんかくめ？</div>
-      <div class="choices">
-        ${options.map(n => `<button class="btn" data-ans="${n}">${n}かくめ</button>`).join("")}
-      </div>
-      <div class="tiny">※ 赤い線が「${correct}かくめ」かを当てるよ。</div>
-    `;
-
-    el.card.querySelectorAll("button[data-ans]").forEach(btn => {
-      btn.addEventListener("click", () => {
-        if (state.blocking) return;
-        const ans = Number(btn.getAttribute("data-ans"));
-        const ok = ans === correct;
-        answerCommon(ok, ok ? "せいかい！" : `ざんねん…（こたえ：${correct}かくめ）`);
-        state.answered.add("s:" + k + ":" + correct);
-      });
-    });
-  }
-
-  // -----------------------
-  // Mode start / Events
-  // -----------------------
-  function startMode(m) {
-    state.mode = m;
-    state.setIndex = 0;
-    state.inSetCorrect = 0;
-    state.blocking = false;
-    hideOverlay();
-    setPills();
+function showResult(ok, answer){
+  resultTextEl.className = ok ? "ok" : "ng";
+  resultTextEl.textContent = ok ? "せいかい！" : "まちがい！";
+  answerTextEl.textContent = ok ? "" : ("こたえ： " + answer);
+  resultEl.style.display = "flex";
+  setTimeout(()=>{
+    resultEl.style.display = "none";
     nextQuestion();
+  }, ok ? 650 : 850);
+}
+
+function makeButtons(options, correctValue, isCorrectFn){
+  contentEl.innerHTML = "";
+  const wrap = document.createElement("div");
+  wrap.className = "choices";
+  options.forEach(v=>{
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = v;
+    b.onclick = ()=>{
+      const ok = isCorrectFn(v, correctValue);
+      showResult(ok, correctValue);
+    };
+    wrap.appendChild(b);
+  });
+  contentEl.appendChild(wrap);
+}
+
+function questionYomi(d){
+  contentEl.innerHTML = `<div class="kanji">${d.k}</div>`;
+  // 選択肢：正解1 + 乱択2（「代表読み」を出す）
+  const pool = DATA.map(x=>x.y[0]);
+  const correct = d.y[0];
+  const opts = new Set([correct]);
+  while(opts.size<3){
+    const cand = randFrom(pool);
+    if(cand) opts.add(cand);
+  }
+  const options = shuffle([...opts]);
+  // 判定：正解は d.y のどれでもOK（「ただ」も許す）
+  makeButtons(options, correct, (picked)=>{
+    return d.y.includes(picked);
+  });
+}
+
+function questionKaki(d){
+  contentEl.innerHTML = `<div class="kanji">${d.y[0]}</div>`;
+  const pool = DATA.map(x=>x.k);
+  const correct = d.k;
+  const opts = new Set([correct]);
+  while(opts.size<3){
+    const cand = randFrom(pool);
+    if(cand) opts.add(cand);
+  }
+  makeButtons(shuffle([...opts]), correct, (picked)=>picked===correct);
+}
+
+function questionKakijun(d){
+  // 赤い点：必ず見える（太字＋赤）
+  const n = 1 + Math.floor(Math.random()*d.s);
+  contentEl.innerHTML = `<div class="kanji">${d.k}</div>`;
+
+  const dots = document.createElement("div");
+  dots.className = "dots";
+  for(let i=1;i<=d.s;i++){
+    const sp = document.createElement("span");
+    sp.textContent = "●";
+    sp.className = (i===n) ? "dot red" : "dot";
+    dots.appendChild(sp);
+  }
+  contentEl.appendChild(dots);
+
+  const correct = String(n);
+  const opts = new Set([correct]);
+  while(opts.size<3){
+    const cand = String(1 + Math.floor(Math.random()*d.s));
+    opts.add(cand);
+  }
+  makeButtons(shuffle([...opts]), correct, (picked)=>picked===correct);
+}
+
+function nextQuestion(){
+  idx++;
+  if(idx > LIMIT){
+    // 終了画面
+    contentEl.innerHTML = `
+      <div style="margin-top:26px;font-size:34px;font-weight:900;">おしまい！</div>
+      <div style="margin-top:10px;color:#555;font-weight:800;">ホームに戻って別モードもやろう</div>
+      <div style="margin-top:18px;">
+        <a href="index.html" style="display:inline-block;text-decoration:none;background:#4f7cff;color:#fff;padding:14px 18px;border-radius:14px;font-weight:900;font-size:18px;">ホームへ</a>
+      </div>
+    `;
+    counterEl.textContent = `${LIMIT} / ${LIMIT}`;
+    return;
   }
 
-  el.btnNext.addEventListener("click", () => { hideOverlay(); state.blocking = false; nextQuestion(); });
-  el.btnHome.addEventListener("click", toHome);
-  el.btnToHome2.addEventListener("click", toHome);
-  el.btnReset.addEventListener("click", resetAll);
+  counterEl.textContent = `${idx} / ${LIMIT}`;
+  current = randFrom(DATA);
 
-  loadProgress();
-  setPills();
+  if(mode==="yomi") return questionYomi(current);
+  if(mode==="kaki") return questionKaki(current);
+  return questionKakijun(current);
+}
 
-  if (initialMode === "yomi" || initialMode === "kaki" || initialMode === "kakinjun") startMode(initialMode);
-  else renderHome();
-})();
+/* 起動 */
+setHeader();
+idx = 1;
+counterEl.textContent = `${idx} / ${LIMIT}`;
+current = randFrom(DATA);
+if(mode==="yomi") questionYomi(current);
+else if(mode==="kaki") questionKaki(current);
+else questionKakijun(current);
 </script>
+
 </body>
 </html>
