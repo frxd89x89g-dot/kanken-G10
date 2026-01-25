@@ -25,6 +25,13 @@
   .prompt{text-align:center; margin:10px 0 14px; color:var(--muted); font-weight:700; font-size:14px}
   .big{text-align:center; font-weight:900; font-size:110px; line-height:1; margin:6px 0 10px; letter-spacing:.02em}
   .big.small{font-size:86px}
+  .big.end-screen{font-size:74px; letter-spacing:.01em}
+  .muted{color:#64748b; font-weight:800}
+  @media (max-width: 520px){
+    .big{font-size:90px}
+    .big.small{font-size:70px}
+    .big.end-screen{font-size:62px}
+  }
   .svgBox{display:flex; justify-content:center; margin:10px 0 6px}
   svg{width:220px; height:220px}
   .choices{display:grid; gap:12px; margin-top:14px}
@@ -32,9 +39,45 @@
     background:var(--btn); color:var(--btnText); font-weight:900; font-size:22px; letter-spacing:.02em;
     box-shadow:0 12px 26px rgba(15,23,42,.12)}
   .choice:active{transform:translateY(1px)}
-  .toast{margin-top:12px; text-align:center; font-weight:900}
+  /* Result feedback (kid-friendly, very visible) */
+  .toast{margin-top:12px; text-align:center; font-weight:1000; letter-spacing:.02em}
   .toast.good{color:var(--good)}
   .toast.bad{color:var(--bad)}
+
+  .result-pop{position:fixed; left:50%; top:18px; transform:translateX(-50%) translateY(-6px);
+    min-width:min(520px, calc(100vw - 24px));
+    background:rgba(255,255,255,.96);
+    border:2px solid rgba(0,0,0,.06);
+    box-shadow:0 18px 50px rgba(17,24,39,.22);
+    border-radius:18px;
+    padding:14px 16px;
+    text-align:center;
+    font-weight:1000;
+    font-size:clamp(18px, 4.4vw, 26px);
+    opacity:0; pointer-events:none;
+    transition:opacity .16s ease, transform .16s ease;
+    z-index:999;
+  }
+  .result-pop.show{opacity:1; transform:translateX(-50%) translateY(0)}
+  .result-pop.good{outline: 4px solid rgba(34,197,94,.18)}
+  .result-pop.bad{outline: 4px solid rgba(239,68,68,.18)}
+  .result-pop .sub{display:block; margin-top:4px; font-weight:900; font-size:clamp(13px, 3.4vw, 16px); opacity:.72}
+
+  /* End screen */
+  .end-wrap{position:relative; overflow:hidden}
+  .confetti{position:absolute; inset:-40px -20px auto -20px; height:140px; pointer-events:none; opacity:.9;
+    background:
+      radial-gradient(circle at 10% 40%, rgba(59,130,246,.35) 0 8px, transparent 9px),
+      radial-gradient(circle at 22% 10%, rgba(34,197,94,.35) 0 7px, transparent 8px),
+      radial-gradient(circle at 35% 60%, rgba(249,115,22,.35) 0 8px, transparent 9px),
+      radial-gradient(circle at 50% 25%, rgba(168,85,247,.35) 0 7px, transparent 8px),
+      radial-gradient(circle at 66% 55%, rgba(236,72,153,.35) 0 8px, transparent 9px),
+      radial-gradient(circle at 82% 18%, rgba(234,179,8,.35) 0 7px, transparent 8px),
+      radial-gradient(circle at 92% 62%, rgba(20,184,166,.35) 0 8px, transparent 9px);
+    filter:blur(.2px);
+    animation:confettiFloat 1.9s ease-in-out infinite alternate;
+  }
+  @keyframes confettiFloat{from{transform:translateY(0)}to{transform:translateY(10px)}}
   .hidden{display:none}
   .endBig{text-align:center; font-weight:1000; font-size:78px; line-height:1; margin:14px 0 8px}
   .subEnd{text-align:center; color:var(--muted); font-weight:700}
@@ -58,6 +101,9 @@
       <div class="toast hidden" id="toast"></div>
     </div>
   </div>
+
+  <!-- Big, visible result feedback -->
+  <div id="resultPop" class="result-pop" aria-live="polite"></div>
 
 <script>
 (() => {
@@ -99,6 +145,23 @@
     t.classList.remove('hidden','good','bad');
     t.classList.add(ok ? 'good' : 'bad');
     t.textContent = ok ? 'せいかい！' : 'ざんねん…';
+
+    // Big pop-up feedback (more visible for 1st graders)
+    const pop = document.getElementById('resultPop');
+    if(pop){
+      pop.textContent = ok ? '✅ せいかい！' : '❌ ざんねん…';
+      pop.className = 'result-pop show ' + (ok ? 'good' : 'bad');
+      window.clearTimeout(pop._hideTimer);
+      pop._hideTimer = window.setTimeout(()=>{
+        pop.className = 'result-pop';
+        pop.textContent = '';
+      }, 900);
+    }
+
+    // Haptics if available (works on many phones)
+    try{
+      if(navigator.vibrate){ navigator.vibrate(ok ? 40 : [60,40,60]); }
+    }catch(e){}
   };
   const clearToast = () => {
     const t = $('toast');
@@ -184,17 +247,30 @@
     $('svgBox').innerHTML = '';
     $('svgBox').classList.add('hidden');
     $('bigText').textContent = '';
-    $('bigText').classList.remove('small');
+    $('bigText').classList.remove('small','end-screen');
 
     if (i >= TOTAL) {
-      $('prompt').textContent = '20もん おつかれ！';
+      $('prompt').innerHTML = `20もん おつかれ！<br><span class="muted">せいかい: ${score}/${TOTAL}</span>`;
       $('title').textContent = (mode==='yomi'?'よみ':mode==='kaki'?'かき':'かきじゅん');
-      $('bigText').classList.add('hidden');
+      $('bigText').classList.remove('hidden');
+      $('bigText').classList.add('end-screen');
+      $('bigText').textContent = '🎉 おわり！';
       $('svgBox').classList.add('hidden');
-      $('choices').innerHTML = '';
-      $('toast').classList.remove('hidden');
-      $('toast').classList.add('good');
-      $('toast').textContent = 'おわり！';
+      $('toast').classList.add('hidden');
+
+      // End screen buttons (big & simple)
+      const c = $('choices');
+      c.innerHTML = '';
+      const again = document.createElement('button');
+      again.className = 'choice';
+      again.textContent = 'もういちど';
+      again.onclick = () => { i = 0; score = 0; render(); };
+      const home = document.createElement('button');
+      home.className = 'choice';
+      home.textContent = 'ホーム';
+      home.onclick = () => { location.href = 'index.html'; };
+      c.appendChild(again);
+      c.appendChild(home);
       $('qNum').textContent = String(TOTAL);
       return;
     }
